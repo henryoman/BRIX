@@ -1,4 +1,4 @@
-module brickbreaker
+module brick-breaker
 
 go 1.24.4
 
