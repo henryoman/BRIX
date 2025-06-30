@@ -48,6 +48,7 @@ func (cs *CollisionSystem) CheckPaddleCollision(ball *entities.Ball, paddle *ent
 		// Ensure strong upward movement after bounce - minimum 50% of speed
 		minVertical := speed * 0.5
 		verticalFromHorizontal := math.Sqrt(speed*speed - newVX*newVX)
+		var newVY float64
 		if verticalFromHorizontal < minVertical {
 			newVY = -minVertical
 			// Recalculate horizontal to maintain speed
