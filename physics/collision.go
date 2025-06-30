@@ -40,9 +40,21 @@ func (cs *CollisionSystem) CheckPaddleCollision(ball *entities.Ball, paddle *ent
 			speed = 240 // fallback speed
 		}
 
-		newVX := offset * speed
-		// Ensure upward movement after bounce
-		newVY := -math.Sqrt(speed*speed - newVX*newVX)
+		// Limit the horizontal component to prevent shallow bounces
+		// Max horizontal is 75% of speed, ensuring minimum 25% vertical
+		maxHorizontal := speed * 0.75
+		newVX := offset * maxHorizontal
+
+		// Ensure strong upward movement after bounce - minimum 50% of speed
+		minVertical := speed * 0.5
+		verticalFromHorizontal := math.Sqrt(speed*speed - newVX*newVX)
+		if verticalFromHorizontal < minVertical {
+			newVY = -minVertical
+			// Recalculate horizontal to maintain speed
+			newVX = math.Copysign(math.Sqrt(speed*speed-newVY*newVY), newVX)
+		} else {
+			newVY = -verticalFromHorizontal
+		}
 
 		ball.SetVelocity(newVX, newVY)
 
@@ -51,7 +63,7 @@ func (cs *CollisionSystem) CheckPaddleCollision(ball *entities.Ball, paddle *ent
 }
 
 // CheckBrickCollisions checks if the ball collides with any bricks
-func (cs *CollisionSystem) CheckBrickCollisions(ball *entities.Ball, bricks []*entities.Brick, score *int) {
+func (cs *CollisionSystem) CheckBrickCollisions(ball *entities.Ball, bricks []*entities.Brick, score *int, lives int) {
 	ballLeft, ballTop, ballRight, ballBottom := ball.GetBounds()
 
 	for _, brick := range bricks {
@@ -67,10 +79,24 @@ func (cs *CollisionSystem) CheckBrickCollisions(ball *entities.Ball, bricks []*e
 
 			// Hit the brick
 			destroyed := brick.Hit()
+
+			// Calculate points based on lives remaining
+			var points int
+			switch lives {
+			case 3:
+				points = 20
+			case 2:
+				points = 10
+			case 1:
+				points = 5
+			default:
+				points = 5 // fallback for any edge case
+			}
+
 			if destroyed {
-				*score += 50 // More points for destroying a brick
+				*score += points // Points for destroying a brick based on lives
 			} else {
-				*score += 20 // Points for hitting a brick
+				*score += points / 2 // Half points for just hitting a brick
 			}
 
 			// Determine collision direction and bounce ball
@@ -82,20 +108,20 @@ func (cs *CollisionSystem) CheckBrickCollisions(ball *entities.Ball, bricks []*e
 	}
 }
 
-// CheckWallCollisions checks if the ball collides with screen boundaries
+// CheckWallCollisions checks if the ball collides with gameplay area boundaries
 func (cs *CollisionSystem) CheckWallCollisions(ball *entities.Ball) {
 	ballLeft, ballTop, ballRight, _ := ball.GetBounds()
 
-	// Left and right walls
-	if ballLeft <= 0 && ball.VX() < 0 {
+	// Left and right walls of gameplay area
+	if ballLeft <= entities.GameAreaLeft && ball.VX() < 0 {
 		ball.ReverseX()
 	}
-	if ballRight >= entities.ScreenWidth && ball.VX() > 0 {
+	if ballRight >= entities.GameAreaRight && ball.VX() > 0 {
 		ball.ReverseX()
 	}
 
-	// Top wall (HUD area)
-	if ballTop <= entities.HUDHeight && ball.VY() < 0 {
+	// Top wall of gameplay area
+	if ballTop <= entities.GameAreaTop && ball.VY() < 0 {
 		ball.ReverseY()
 	}
 

@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	ebiten.SetWindowSize(720, 800)
+	ebiten.SetWindowSize(720, 540)
 	ebiten.SetWindowTitle("Brick Breaker")
 
 	g := game.NewGame()

@@ -182,7 +182,7 @@ func (g *Game) updatePlaying() error {
 
 	// Check collisions
 	g.physics.CheckPaddleCollision(g.ball, g.paddle, &g.score)
-	g.physics.CheckBrickCollisions(g.ball, g.bricks, &g.score)
+	g.physics.CheckBrickCollisions(g.ball, g.bricks, &g.score, g.lives)
 	g.physics.CheckWallCollisions(g.ball)
 
 	// Check if ball is lost
@@ -286,5 +286,5 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 // Layout implements ebiten.Game interface
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return 720, 800
+	return 720, 540
 }

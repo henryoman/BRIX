@@ -5,8 +5,11 @@ import (
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/text"
 	"github.com/hajimehoshi/ebiten/v2/vector"
+	"golang.org/x/image/font"
+	"golang.org/x/image/font/gofont/goregular"
+	"golang.org/x/image/font/opentype"
 
 	"brick-breaker/assets"
 	"brick-breaker/entities"
@@ -15,6 +18,7 @@ import (
 // Renderer handles all drawing operations
 type Renderer struct {
 	images *assets.Images
+	font   font.Face
 }
 
 // NewRenderer creates a new renderer with loaded images
@@ -24,9 +28,31 @@ func NewRenderer() (*Renderer, error) {
 		return nil, fmt.Errorf("failed to load images: %v", err)
 	}
 
+	// Load font
+	tt, err := opentype.Parse(goregular.TTF)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse font: %v", err)
+	}
+
+	const dpi = 72
+	fontFace, err := opentype.NewFace(tt, &opentype.FaceOptions{
+		Size:    20, // Larger font size
+		DPI:     dpi,
+		Hinting: font.HintingFull,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create font face: %v", err)
+	}
+
 	return &Renderer{
 		images: images,
+		font:   fontFace,
 	}, nil
+}
+
+// drawText draws text with the custom font
+func (r *Renderer) drawText(screen *ebiten.Image, str string, x, y int, clr color.Color) {
+	text.Draw(screen, str, r.font, x, y, clr)
 }
 
 // DrawStartScreen draws the start screen
@@ -35,39 +61,36 @@ func (r *Renderer) DrawStartScreen(screen *ebiten.Image, levelName string) {
 	screen.Fill(color.RGBA{0x20, 0x20, 0x30, 0xff})
 
 	// Simple, readable title
-	ebitenutil.DebugPrintAt(screen, "BRICK BREAKER", 360-80, 200)
+	r.drawText(screen, "BRICK BREAKER", 360-80, 170, color.White)
 
 	// Instructions
-	ebitenutil.DebugPrintAt(screen, "Press ARROW KEYS or CLICK to Start", 360-140, 350)
+	r.drawText(screen, "Press ARROW KEYS or CLICK to Start", 360-140, 270, color.White)
 
 	// Level info
 	levelText := fmt.Sprintf("Level: %s", levelName)
-	ebitenutil.DebugPrintAt(screen, levelText, 360-60, 450)
+	r.drawText(screen, levelText, 360-60, 370, color.White)
 }
 
 // DrawGame draws the main game screen
 func (r *Renderer) DrawGame(screen *ebiten.Image, paddle *entities.Paddle, ball *entities.Ball, bricks []*entities.Brick, levelName string, levelNum, score int, lives int) {
-	// HUD background
-	hud := ebiten.NewImage(720, 80)
+	// HUD background (720x30)
+	hud := ebiten.NewImage(720, 30)
 	hud.Fill(color.Black)
 	screen.DrawImage(hud, nil)
 
-	// HUD text
+	// HUD text - single line with all info
 	levelText := levelName
-	if len(levelText) > 30 {
-		levelText = levelText[:30] + "..."
+	if len(levelText) > 20 {
+		levelText = levelText[:20] + "..."
 	}
-	ebitenutil.DebugPrintAt(screen, levelText, 10, 10)
+	r.drawText(screen, levelText, 10, 22, color.White)
 
 	scoreText := fmt.Sprintf("Score: %d", score)
-	ebitenutil.DebugPrintAt(screen, scoreText, 10, 30)
-
-	levelNumText := fmt.Sprintf("Level: %d", levelNum)
-	ebitenutil.DebugPrintAt(screen, levelNumText, 10, 50)
+	r.drawText(screen, scoreText, 200, 22, color.White)
 
 	// Lives display
 	livesText := fmt.Sprintf("Lives: %d", lives)
-	ebitenutil.DebugPrintAt(screen, livesText, 300, 20)
+	r.drawText(screen, livesText, 400, 22, color.White)
 
 	// Bricks remaining
 	activeBricks := 0
@@ -77,14 +100,19 @@ func (r *Renderer) DrawGame(screen *ebiten.Image, paddle *entities.Paddle, ball 
 		}
 	}
 	bricksText := fmt.Sprintf("Bricks: %d", activeBricks)
-	ebitenutil.DebugPrintAt(screen, bricksText, 500, 20)
+	r.drawText(screen, bricksText, 550, 22, color.White)
 
-	// Playfield background
-	playfield := ebiten.NewImage(720, 720)
-	playfield.Fill(color.RGBA{0x80, 0x80, 0x80, 0xff})
+	// Playfield background using level-specific image (700x500 with 10px margins)
+	backgroundImg := r.images.GetLevelBackground(levelNum)
 	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Translate(0, 80)
-	screen.DrawImage(playfield, op)
+
+	// Scale the background image to fit the 700x500 gameplay area
+	imgBounds := backgroundImg.Bounds()
+	scaleX := 700.0 / float64(imgBounds.Dx())
+	scaleY := 500.0 / float64(imgBounds.Dy())
+	op.GeoM.Scale(scaleX, scaleY)
+	op.GeoM.Translate(10, 30) // 10px left margin, 30px top (after HUD)
+	screen.DrawImage(backgroundImg, op)
 
 	// Draw bricks
 	r.drawBricks(screen, bricks)
@@ -102,11 +130,11 @@ func (r *Renderer) DrawGameOver(screen *ebiten.Image, score int) {
 	screen.Fill(color.RGBA{0x20, 0x20, 0x30, 0xff})
 
 	// Game Over text
-	ebitenutil.DebugPrintAt(screen, "GAME OVER", 360-50, 300)
+	r.drawText(screen, "GAME OVER", 360-50, 220, color.White)
 
 	// Final score
 	scoreText := fmt.Sprintf("Final Score: %d", score)
-	ebitenutil.DebugPrintAt(screen, scoreText, 360-60, 400)
+	r.drawText(screen, scoreText, 360-60, 320, color.White)
 }
 
 // DrawWaitingToContinue draws the waiting to continue screen
@@ -115,14 +143,14 @@ func (r *Renderer) DrawWaitingToContinue(screen *ebiten.Image, lives int) {
 	screen.Fill(color.RGBA{0x20, 0x20, 0x30, 0xff})
 
 	// Ball lost message
-	ebitenutil.DebugPrintAt(screen, "BALL LOST!", 360-50, 300)
+	r.drawText(screen, "BALL LOST!", 360-50, 200, color.White)
 
 	// Lives remaining
 	livesText := fmt.Sprintf("Lives Remaining: %d", lives)
-	ebitenutil.DebugPrintAt(screen, livesText, 360-80, 350)
+	r.drawText(screen, livesText, 360-80, 270, color.White)
 
 	// Continue instruction
-	ebitenutil.DebugPrintAt(screen, "Press ANY KEY to Continue", 360-100, 450)
+	r.drawText(screen, "Press ANY KEY to Continue", 360-100, 370, color.White)
 }
 
 // DrawPauseScreen draws the pause screen
@@ -131,10 +159,10 @@ func (r *Renderer) DrawPauseScreen(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{0x20, 0x20, 0x30, 0xff})
 
 	// Pause message
-	ebitenutil.DebugPrintAt(screen, "GAME PAUSED", 360-60, 350)
+	r.drawText(screen, "GAME PAUSED", 360-60, 220, color.White)
 
 	// Resume instruction
-	ebitenutil.DebugPrintAt(screen, "Press ANY KEY to Resume", 360-100, 450)
+	r.drawText(screen, "Press ANY KEY to Resume", 360-100, 320, color.White)
 }
 
 // DrawLevelComplete draws the level complete screen
@@ -143,10 +171,10 @@ func (r *Renderer) DrawLevelComplete(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{0x20, 0x20, 0x30, 0xff})
 
 	// Level complete message
-	ebitenutil.DebugPrintAt(screen, "LEVEL COMPLETE!", 360-70, 300)
+	r.drawText(screen, "LEVEL COMPLETE!", 360-70, 220, color.White)
 
 	// Continue instruction
-	ebitenutil.DebugPrintAt(screen, "Press ANY KEY to Continue", 360-100, 450)
+	r.drawText(screen, "Press ANY KEY to Continue", 360-100, 320, color.White)
 }
 
 // drawBricks draws all active bricks using sprite images
@@ -171,15 +199,15 @@ func (r *Renderer) drawBricks(screen *ebiten.Image, bricks []*entities.Brick) {
 
 		screen.DrawImage(brickImg, op)
 
-		// Draw white outline for better visibility
+		// Draw white outline for better visibility (25% opacity)
 		vector.StrokeRect(screen, float32(brickX), float32(brickY),
-			float32(brick.Width()), float32(brick.Height()), 1, color.White, false)
+			float32(brick.Width()), float32(brick.Height()), 1, color.RGBA{255, 255, 255, 64}, false)
 
 		// Show hit count if more than 1
 		if brick.Hits() > 1 {
 			hitText := fmt.Sprintf("%d", brick.Hits())
-			ebitenutil.DebugPrintAt(screen, hitText,
-				int(brickX)+brick.Width()/2-3, int(brickY)+brick.Height()/2-4)
+			r.drawText(screen, hitText,
+				int(brickX)+brick.Width()/2-3, int(brickY)+brick.Height()/2-4, color.White)
 		}
 	}
 }

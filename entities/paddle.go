@@ -12,9 +12,17 @@ const (
 	PaddleFriction = 2400.0 // px/s² when no key
 	PaddleMaxSpeed = 450.0  // px/s terminal velocity (further reduced)
 
-	PaddleY = 700 // Y position (near bottom)
+	PaddleY = 500 // Y position (moved DOWN towards bottom)
 
-	ScreenWidth = 720
+	// Gameplay area boundaries (not full screen)
+	GameAreaLeft   = 10  // 10px left margin
+	GameAreaRight  = 710 // 10px + 700px width
+	GameAreaTop    = 30  // 30px top (HUD)
+	GameAreaBottom = 530 // 30px + 500px height
+	GameAreaWidth  = 700 // gameplay area width
+	GameAreaHeight = 500 // gameplay area height
+
+	ScreenWidth = 720        // full screen width
 	Tick        = 1.0 / 60.0 // fixed timestep (should match ebiten TPS)
 )
 
@@ -24,10 +32,10 @@ type Paddle struct {
 	vx float64 // horizontal velocity
 }
 
-// NewPaddle creates a new paddle at the center of the screen
+// NewPaddle creates a new paddle at the center of the gameplay area
 func NewPaddle() *Paddle {
 	return &Paddle{
-		x:  ScreenWidth / 2,
+		x:  GameAreaLeft + GameAreaWidth/2, // center of gameplay area
 		vx: 0,
 	}
 }
@@ -71,13 +79,13 @@ func (p *Paddle) Update() {
 	// 4. Integrate position
 	p.x += p.vx * Tick
 
-	// 5. Collision with screen edges – stop and zero velocity
-	if p.x < PaddleWidth/2 {
-		p.x = PaddleWidth / 2
+	// 5. Collision with gameplay area edges – stop and zero velocity
+	if p.x < GameAreaLeft+PaddleWidth/2 {
+		p.x = GameAreaLeft + PaddleWidth/2
 		p.vx = 0
 	}
-	if p.x > ScreenWidth-PaddleWidth/2 {
-		p.x = ScreenWidth - PaddleWidth/2
+	if p.x > GameAreaRight-PaddleWidth/2 {
+		p.x = GameAreaRight - PaddleWidth/2
 		p.vx = 0
 	}
 }
