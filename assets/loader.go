@@ -13,30 +13,30 @@ import (
 
 // Embed all sprite files
 //
-//go:embed paddle.png
+//go:embed paddles/paddle.png
 var paddlePNG []byte
 
-//go:embed brick.png
+//go:embed bricks/brick.png
 var brickPNG []byte
 
-//go:embed brick-green.png
+//go:embed bricks/brick-green.png
 var brickGreenPNG []byte
 
-//go:embed brick-blue.png
+//go:embed bricks/brick-blue.png
 var brickBluePNG []byte
 
-//go:embed brick-columbia.png
+//go:embed bricks/brick-columbia.png
 var brickColumbiaPNG []byte
 
-//go:embed brick-supreme.png
+//go:embed bricks/brick-supreme.png
 var brickSupremePNG []byte
 
 // Embed level background images
 //
-//go:embed level1.png
+//go:embed levels/level1.png
 var level1BackgroundPNG []byte
 
-//go:embed level2.png
+//go:embed levels/level2.png
 var level2BackgroundPNG []byte
 
 // Images holds all loaded game sprites
