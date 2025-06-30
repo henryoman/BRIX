@@ -165,7 +165,7 @@ func (b *Brick) GetScreenPosition() (float64, float64) {
 	brickOffsetFromFieldStart := float64((b.x - b.fieldMinX) * (b.width + b.spacingX))
 
 	screenX := fieldStartX + brickOffsetFromFieldStart
-	screenY := float64(GameAreaTop + 40 + b.y*(b.height+b.spacingY)) // Added 40px margin from top
+	screenY := float64(GameAreaTop - 50 + b.y*(b.height+b.spacingY)) // Move WAY up towards top
 
 	return screenX, screenY
 }
