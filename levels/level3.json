@@ -1,0 +1,43 @@
+{
+  "name": "Level 3",
+  "brick_width": 60,
+  "brick_height": 30,
+  "brick_spacing_x": 20,
+  "brick_spacing_y": 20,
+  "ball_speed": 300,
+  "bricks": [
+    {"x": 2, "y": 2, "bricktype": "default", "hits": 1},
+    {"x": 3, "y": 2, "bricktype": "default", "hits": 1},
+    {"x": 4, "y": 2, "bricktype": "default", "hits": 1},
+    {"x": 5, "y": 2, "bricktype": "default", "hits": 1},
+    {"x": 6, "y": 2, "bricktype": "default", "hits": 1},
+    {"x": 7, "y": 2, "bricktype": "default", "hits": 1},
+
+    {"x": 1, "y": 3, "bricktype": "green", "hits": 1},
+    {"x": 2, "y": 3, "bricktype": "default", "hits": 1},
+    {"x": 3, "y": 3, "bricktype": "default", "hits": 1},
+    {"x": 4, "y": 3, "bricktype": "default", "hits": 1},
+    {"x": 5, "y": 3, "bricktype": "default", "hits": 1},
+    {"x": 6, "y": 3, "bricktype": "default", "hits": 1},
+    {"x": 7, "y": 3, "bricktype": "default", "hits": 1},
+    {"x": 8, "y": 3, "bricktype": "green", "hits": 1},
+
+    {"x": 0, "y": 4, "bricktype": "blue", "hits": 2},
+    {"x": 1, "y": 4, "bricktype": "blue", "hits": 2},
+    {"x": 2, "y": 4, "bricktype": "blue", "hits": 2},
+    {"x": 3, "y": 4, "bricktype": "blue", "hits": 2},
+    {"x": 4, "y": 4, "bricktype": "blue", "hits": 2},
+    {"x": 5, "y": 4, "bricktype": "blue", "hits": 2},
+    {"x": 6, "y": 4, "bricktype": "blue", "hits": 2},
+    {"x": 7, "y": 4, "bricktype": "blue", "hits": 2},
+    {"x": 8, "y": 4, "bricktype": "blue", "hits": 2},
+    {"x": 9, "y": 4, "bricktype": "blue", "hits": 2},
+    {"x": 10, "y": 4, "bricktype": "blue", "hits": 2},
+    {"x": 11, "y": 4, "bricktype": "blue", "hits": 2},
+
+    {"x": 4, "y": 5, "bricktype": "supreme", "hits": 1},
+    {"x": 5, "y": 5, "bricktype": "supreme", "hits": 1},
+    {"x": 6, "y": 5, "bricktype": "supreme", "hits": 1},
+    {"x": 7, "y": 5, "bricktype": "supreme", "hits": 1}
+  ]
+} 
