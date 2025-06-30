@@ -2,6 +2,7 @@ package physics
 
 import (
 	"brick-breaker/entities"
+	"math"
 )
 
 // CollisionSystem handles all collision detection in the game
@@ -24,8 +25,27 @@ func (cs *CollisionSystem) CheckPaddleCollision(ball *entities.Ball, paddle *ent
 	// Check if ball overlaps with paddle
 	if ballBottom >= paddleTop && ballTop <= paddleBottom &&
 		ballRight >= paddleLeft && ballLeft <= paddleRight {
+		// Compute offset from paddle center (-1 .. 1)
+		offset := (ball.X() - paddle.X()) / (paddle.Width() / 2)
+		if offset < -1 {
+			offset = -1
+		}
+		if offset > 1 {
+			offset = 1
+		}
 
-		ball.ReverseY()
+		// Maintain current speed magnitude but adjust direction
+		speed := math.Hypot(ball.VX(), ball.VY())
+		if speed == 0 {
+			speed = 240 // fallback speed
+		}
+
+		newVX := offset * speed
+		// Ensure upward movement after bounce
+		newVY := -math.Sqrt(speed*speed - newVX*newVX)
+
+		ball.SetVelocity(newVX, newVY)
+
 		*score += 10 // Add points for hitting paddle
 	}
 }
@@ -64,7 +84,7 @@ func (cs *CollisionSystem) CheckBrickCollisions(ball *entities.Ball, bricks []*e
 
 // CheckWallCollisions checks if the ball collides with screen boundaries
 func (cs *CollisionSystem) CheckWallCollisions(ball *entities.Ball) {
-	ballLeft, ballTop, ballRight, ballBottom := ball.GetBounds()
+	ballLeft, ballTop, ballRight, _ := ball.GetBounds()
 
 	// Left and right walls
 	if ballLeft <= 0 && ball.VX() < 0 {

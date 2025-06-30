@@ -2,7 +2,6 @@ package entities
 
 const (
 	BallRadius = 10
-	BallSpeed  = 240 // pixels per second
 	HUDHeight  = 80
 )
 
@@ -10,15 +9,22 @@ const (
 type Ball struct {
 	x, y   float64 // center position
 	vx, vy float64 // velocity
+	speed  float64 // configured speed for this ball
 }
 
-// NewBall creates a new ball positioned above the paddle
+// NewBall creates a new ball positioned above the paddle with default speed
 func NewBall() *Ball {
+	return NewBallWithSpeed(240) // default speed
+}
+
+// NewBallWithSpeed creates a new ball with configurable speed
+func NewBallWithSpeed(speed float64) *Ball {
 	return &Ball{
-		x:  ScreenWidth / 2,
-		y:  PaddleY - 40,
-		vx: BallSpeed,
-		vy: -BallSpeed,
+		x:     ScreenWidth / 2,
+		y:     PaddleY - 40,
+		vx:    speed,
+		vy:    -speed,
+		speed: speed,
 	}
 }
 

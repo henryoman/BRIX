@@ -5,10 +5,8 @@ import (
 )
 
 const (
-	BrickWidth  = 60
-	BrickHeight = 20
-	BrickCols   = 12
-	BrickRows   = 10
+	BrickCols = 12
+	BrickRows = 10
 )
 
 // Brick represents a single brick in the level
@@ -17,6 +15,10 @@ type Brick struct {
 	color  string // color name
 	hits   int    // hits required to destroy
 	active bool   // whether brick is still active
+
+	// Level-specific sizing (set when brick is created)
+	width, height      int
+	spacingX, spacingY int
 }
 
 // LevelBrick represents a brick definition from level data
@@ -27,25 +29,33 @@ type LevelBrick struct {
 	Hits  int    `json:"hits"`
 }
 
-// NewBrick creates a new brick at the specified grid position
-func NewBrick(x, y int, color string, hits int) *Brick {
+// NewBrick creates a new brick at the specified grid position with custom sizing
+func NewBrick(x, y int, color string, hits int, width, height, spacingX, spacingY int) *Brick {
 	return &Brick{
-		x:      x,
-		y:      y,
-		color:  color,
-		hits:   hits,
-		active: true,
+		x:        x,
+		y:        y,
+		color:    color,
+		hits:     hits,
+		active:   true,
+		width:    width,
+		height:   height,
+		spacingX: spacingX,
+		spacingY: spacingY,
 	}
 }
 
-// NewBrickFromLevel creates a brick from level data
-func NewBrickFromLevel(levelBrick LevelBrick) *Brick {
+// NewBrickFromLevel creates a brick from level data with level's sizing
+func NewBrickFromLevel(levelBrick LevelBrick, width, height, spacingX, spacingY int) *Brick {
 	return &Brick{
-		x:      levelBrick.X,
-		y:      levelBrick.Y,
-		color:  levelBrick.Color,
-		hits:   levelBrick.Hits,
-		active: true,
+		x:        levelBrick.X,
+		y:        levelBrick.Y,
+		color:    levelBrick.Color,
+		hits:     levelBrick.Hits,
+		active:   true,
+		width:    width,
+		height:   height,
+		spacingX: spacingX,
+		spacingY: spacingY,
 	}
 }
 
@@ -88,10 +98,10 @@ func (b *Brick) Hit() bool {
 	return false // brick damaged but not destroyed
 }
 
-// GetScreenPosition returns the pixel position of the brick on screen
+// GetScreenPosition returns the pixel position of the brick on screen with gaps
 func (b *Brick) GetScreenPosition() (float64, float64) {
-	screenX := float64(b.x * BrickWidth)
-	screenY := float64(HUDHeight + b.y*BrickHeight)
+	screenX := float64(b.x * (b.width + b.spacingX))
+	screenY := float64(HUDHeight + b.y*(b.height+b.spacingY))
 	return screenX, screenY
 }
 
@@ -99,9 +109,9 @@ func (b *Brick) GetScreenPosition() (float64, float64) {
 func (b *Brick) GetBounds() (left, top, right, bottom float64) {
 	screenX, screenY := b.GetScreenPosition()
 	left = screenX
-	right = screenX + BrickWidth
+	right = screenX + float64(b.width)
 	top = screenY
-	bottom = screenY + BrickHeight
+	bottom = screenY + float64(b.height)
 	return
 }
 
@@ -123,4 +133,14 @@ func (b *Brick) GetColor() color.Color {
 	default:
 		return color.RGBA{200, 200, 200, 255} // gray default
 	}
+}
+
+// Width returns the brick's width
+func (b *Brick) Width() int {
+	return b.width
+}
+
+// Height returns the brick's height
+func (b *Brick) Height() int {
+	return b.height
 }

@@ -17,6 +17,7 @@ type GameState int
 const (
 	StateStart GameState = iota
 	StatePlaying
+	StateWaitingToContinue
 	StateGameOver
 )
 
@@ -29,6 +30,7 @@ type Game struct {
 
 	currentLevel int
 	score        int
+	lives        int // player lives
 	state        GameState
 
 	physics  *physics.CollisionSystem
@@ -37,23 +39,32 @@ type Game struct {
 
 // NewGame creates a new game instance
 func NewGame() *Game {
+	// Initialize renderer first since it can fail
+	renderer, err := render.NewRenderer()
+	if err != nil {
+		log.Fatalf("Failed to create renderer: %v", err)
+	}
+
 	game := &Game{
 		currentLevel: 1,
 		score:        0,
+		lives:        3,
 		state:        StateStart,
 		physics:      physics.NewCollisionSystem(),
-		renderer:     render.NewRenderer(),
+		renderer:     renderer,
 	}
 
 	// Initialize game entities
 	game.paddle = entities.NewPaddle()
-	game.ball = entities.NewBall()
 
 	// Load the first level
 	if err := game.loadLevel(1); err != nil {
 		log.Printf("Failed to load level 1: %v", err)
 		game.createFallbackLevel()
 	}
+
+	// Create ball with level's speed
+	game.ball = entities.NewBallWithSpeed(game.level.BallSpeed)
 
 	return game
 }
@@ -68,9 +79,10 @@ func (g *Game) loadLevel(levelNum int) error {
 	g.level = level
 	g.bricks = make([]*entities.Brick, len(level.Bricks))
 
-	// Convert level bricks to game entities
+	// Convert level bricks to game entities with level's sizing
 	for i, levelBrick := range level.Bricks {
-		g.bricks[i] = entities.NewBrickFromLevel(levelBrick)
+		g.bricks[i] = entities.NewBrickFromLevel(levelBrick,
+			level.BrickWidth, level.BrickHeight, level.BrickSpacingX, level.BrickSpacingY)
 	}
 
 	log.Printf("Level loaded: %s with %d bricks", level.Name, len(g.bricks))
@@ -80,15 +92,20 @@ func (g *Game) loadLevel(levelNum int) error {
 // createFallbackLevel creates a simple level if loading fails
 func (g *Game) createFallbackLevel() {
 	g.level = &levels.Level{
-		Name: "Default Level",
+		Name:          "Default Level",
+		BrickWidth:    120,
+		BrickHeight:   60,
+		BrickSpacingX: 30,
+		BrickSpacingY: 25,
+		BallSpeed:     200,
 	}
 
-	// Create a simple pattern of bricks
+	// Create a simple pattern of bricks with fallback sizing
 	g.bricks = []*entities.Brick{
-		entities.NewBrick(4, 2, "red", 1),
-		entities.NewBrick(5, 2, "red", 1),
-		entities.NewBrick(6, 2, "red", 1),
-		entities.NewBrick(7, 2, "red", 1),
+		entities.NewBrick(2, 2, "red", 1, 120, 60, 30, 25),
+		entities.NewBrick(3, 2, "red", 1, 120, 60, 30, 25),
+		entities.NewBrick(4, 2, "red", 1, 120, 60, 30, 25),
+		entities.NewBrick(5, 2, "red", 1, 120, 60, 30, 25),
 	}
 }
 
@@ -99,6 +116,8 @@ func (g *Game) Update() error {
 		return g.updateStart()
 	case StatePlaying:
 		return g.updatePlaying()
+	case StateWaitingToContinue:
+		return g.updateWaitingToContinue()
 	case StateGameOver:
 		return g.updateGameOver()
 	}
@@ -130,7 +149,12 @@ func (g *Game) updatePlaying() error {
 
 	// Check if ball is lost
 	if g.ball.IsLost() {
-		g.state = StateGameOver
+		g.lives-- // Subtract life immediately when ball is lost
+		if g.lives <= 0 {
+			g.state = StateGameOver
+		} else {
+			g.state = StateWaitingToContinue
+		}
 	}
 
 	// Check if level is complete
@@ -149,6 +173,20 @@ func (g *Game) updatePlaying() error {
 	return nil
 }
 
+// updateWaitingToContinue handles waiting to continue after losing a life
+func (g *Game) updateWaitingToContinue() error {
+	// Check for any input to continue
+	if ebiten.IsKeyPressed(ebiten.KeyLeft) || ebiten.IsKeyPressed(ebiten.KeyRight) ||
+		ebiten.IsKeyPressed(ebiten.KeyA) || ebiten.IsKeyPressed(ebiten.KeyD) ||
+		ebiten.IsKeyPressed(ebiten.KeySpace) || ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+
+		// Reset ball position and continue playing (life already decremented)
+		g.ball = entities.NewBallWithSpeed(g.level.BallSpeed)
+		g.state = StatePlaying
+	}
+	return nil
+}
+
 // updateGameOver handles game over state
 func (g *Game) updateGameOver() error {
 	// Could handle restart logic here
@@ -161,7 +199,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	case StateStart:
 		g.renderer.DrawStartScreen(screen, g.level.Name)
 	case StatePlaying:
-		g.renderer.DrawGame(screen, g.paddle, g.ball, g.bricks, g.level.Name, g.currentLevel, g.score)
+		g.renderer.DrawGame(screen, g.paddle, g.ball, g.bricks, g.level.Name, g.currentLevel, g.score, g.lives)
+	case StateWaitingToContinue:
+		g.renderer.DrawWaitingToContinue(screen, g.lives)
 	case StateGameOver:
 		g.renderer.DrawGameOver(screen, g.score)
 	}

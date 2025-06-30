@@ -8,15 +8,25 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 
+	"brick-breaker/assets"
 	"brick-breaker/entities"
 )
 
 // Renderer handles all drawing operations
-type Renderer struct{}
+type Renderer struct {
+	images *assets.Images
+}
 
-// NewRenderer creates a new renderer
-func NewRenderer() *Renderer {
-	return &Renderer{}
+// NewRenderer creates a new renderer with loaded images
+func NewRenderer() (*Renderer, error) {
+	images, err := assets.LoadImages()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load images: %v", err)
+	}
+
+	return &Renderer{
+		images: images,
+	}, nil
 }
 
 // DrawStartScreen draws the start screen
@@ -36,7 +46,7 @@ func (r *Renderer) DrawStartScreen(screen *ebiten.Image, levelName string) {
 }
 
 // DrawGame draws the main game screen
-func (r *Renderer) DrawGame(screen *ebiten.Image, paddle *entities.Paddle, ball *entities.Ball, bricks []*entities.Brick, levelName string, levelNum, score int) {
+func (r *Renderer) DrawGame(screen *ebiten.Image, paddle *entities.Paddle, ball *entities.Ball, bricks []*entities.Brick, levelName string, levelNum, score int, lives int) {
 	// HUD background
 	hud := ebiten.NewImage(720, 80)
 	hud.Fill(color.Black)
@@ -55,6 +65,10 @@ func (r *Renderer) DrawGame(screen *ebiten.Image, paddle *entities.Paddle, ball 
 	levelNumText := fmt.Sprintf("Level: %d", levelNum)
 	ebitenutil.DebugPrintAt(screen, levelNumText, 10, 50)
 
+	// Lives display
+	livesText := fmt.Sprintf("Lives: %d", lives)
+	ebitenutil.DebugPrintAt(screen, livesText, 300, 20)
+
 	// Bricks remaining
 	activeBricks := 0
 	for _, brick := range bricks {
@@ -63,7 +77,7 @@ func (r *Renderer) DrawGame(screen *ebiten.Image, paddle *entities.Paddle, ball 
 		}
 	}
 	bricksText := fmt.Sprintf("Bricks: %d", activeBricks)
-	ebitenutil.DebugPrintAt(screen, bricksText, 400, 20)
+	ebitenutil.DebugPrintAt(screen, bricksText, 500, 20)
 
 	// Playfield background
 	playfield := ebiten.NewImage(720, 720)
@@ -95,7 +109,23 @@ func (r *Renderer) DrawGameOver(screen *ebiten.Image, score int) {
 	ebitenutil.DebugPrintAt(screen, scoreText, 360-60, 400)
 }
 
-// drawBricks draws all active bricks
+// DrawWaitingToContinue draws the waiting to continue screen
+func (r *Renderer) DrawWaitingToContinue(screen *ebiten.Image, lives int) {
+	// Clear screen with dark background
+	screen.Fill(color.RGBA{0x20, 0x20, 0x30, 0xff})
+
+	// Ball lost message
+	ebitenutil.DebugPrintAt(screen, "BALL LOST!", 360-50, 300)
+
+	// Lives remaining
+	livesText := fmt.Sprintf("Lives Remaining: %d", lives)
+	ebitenutil.DebugPrintAt(screen, livesText, 360-80, 350)
+
+	// Continue instruction
+	ebitenutil.DebugPrintAt(screen, "Press ANY KEY to Continue", 360-100, 450)
+}
+
+// drawBricks draws all active bricks using sprite images
 func (r *Renderer) drawBricks(screen *ebiten.Image, bricks []*entities.Brick) {
 	for _, brick := range bricks {
 		if !brick.IsActive() {
@@ -103,33 +133,38 @@ func (r *Renderer) drawBricks(screen *ebiten.Image, bricks []*entities.Brick) {
 		}
 
 		brickX, brickY := brick.GetScreenPosition()
-		brickColor := brick.GetColor()
+		brickImg := r.images.GetBrickImage(brick.Color())
 
-		// Draw brick as filled rectangle
-		vector.DrawFilledRect(screen, float32(brickX), float32(brickY),
-			float32(entities.BrickWidth), float32(entities.BrickHeight), brickColor, false)
+		// Draw brick sprite scaled to the brick's configured size
+		op := &ebiten.DrawImageOptions{}
 
-		// Draw brick outline for better visibility
+		// Scale the sprite to fit exactly into the brick's size
+		imgBounds := brickImg.Bounds()
+		scaleX := float64(brick.Width()) / float64(imgBounds.Dx())
+		scaleY := float64(brick.Height()) / float64(imgBounds.Dy())
+		op.GeoM.Scale(scaleX, scaleY)
+		op.GeoM.Translate(brickX, brickY)
+
+		screen.DrawImage(brickImg, op)
+
+		// Draw white outline for better visibility
 		vector.StrokeRect(screen, float32(brickX), float32(brickY),
-			float32(entities.BrickWidth), float32(entities.BrickHeight), 1, color.White, false)
+			float32(brick.Width()), float32(brick.Height()), 1, color.White, false)
 
 		// Show hit count if more than 1
 		if brick.Hits() > 1 {
 			hitText := fmt.Sprintf("%d", brick.Hits())
 			ebitenutil.DebugPrintAt(screen, hitText,
-				int(brickX)+entities.BrickWidth/2-3, int(brickY)+entities.BrickHeight/2-4)
+				int(brickX)+brick.Width()/2-3, int(brickY)+brick.Height()/2-4)
 		}
 	}
 }
 
-// drawPaddle draws the paddle
+// drawPaddle draws the paddle using sprite image
 func (r *Renderer) drawPaddle(screen *ebiten.Image, paddle *entities.Paddle) {
-	paddleImg := ebiten.NewImage(int(paddle.Width()), int(paddle.Height()))
-	paddleImg.Fill(color.RGBA{0x7f, 0xff, 0x7f, 0xff})
-
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Translate(paddle.X()-paddle.Width()/2, paddle.Y())
-	screen.DrawImage(paddleImg, op)
+	screen.DrawImage(r.images.Paddle, op)
 }
 
 // drawBall draws the ball as a circle

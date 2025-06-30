@@ -11,8 +11,13 @@ import (
 
 // Level represents a complete level configuration
 type Level struct {
-	Name   string                `json:"name"`
-	Bricks []entities.LevelBrick `json:"bricks"`
+	Name          string                `json:"name"`
+	BrickWidth    int                   `json:"brick_width"`     // configurable brick width
+	BrickHeight   int                   `json:"brick_height"`    // configurable brick height
+	BrickSpacingX int                   `json:"brick_spacing_x"` // horizontal gap
+	BrickSpacingY int                   `json:"brick_spacing_y"` // vertical gap
+	BallSpeed     float64               `json:"ball_speed"`      // ball speed in pixels per second
+	Bricks        []entities.LevelBrick `json:"bricks"`
 }
 
 // LoadLevel loads a level from a JSON file
