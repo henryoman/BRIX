@@ -9,12 +9,23 @@ const (
 	BrickRows = 10
 )
 
+// BrickType represents the type of brick with direct sprite mapping
+type BrickType string
+
+const (
+	BrickTypeDefault  BrickType = "default"  // brick.png - red/orange/yellow
+	BrickTypeGreen    BrickType = "green"    // brick-green.png
+	BrickTypeBlue     BrickType = "blue"     // brick-blue.png
+	BrickTypeColumbia BrickType = "columbia" // brick-columbia.png - white
+	BrickTypeSupreme  BrickType = "supreme"  // brick-supreme.png - pink/purple
+)
+
 // Brick represents a single brick in the level
 type Brick struct {
-	x, y   int    // grid position
-	color  string // color name
-	hits   int    // hits required to destroy
-	active bool   // whether brick is still active
+	x, y      int       // grid position
+	brickType BrickType // type of brick (maps directly to sprite)
+	hits      int       // hits required to destroy
+	active    bool      // whether brick is still active
 
 	// Level-specific sizing (set when brick is created)
 	width, height      int
@@ -23,39 +34,57 @@ type Brick struct {
 
 // LevelBrick represents a brick definition from level data
 type LevelBrick struct {
-	X     int    `json:"x"`
-	Y     int    `json:"y"`
-	Color string `json:"color"`
-	Hits  int    `json:"hits"`
+	X         int    `json:"x"`
+	Y         int    `json:"y"`
+	BrickType string `json:"bricktype"` // brick type name
+	Hits      int    `json:"hits"`
 }
 
 // NewBrick creates a new brick at the specified grid position with custom sizing
-func NewBrick(x, y int, color string, hits int, width, height, spacingX, spacingY int) *Brick {
+func NewBrick(x, y int, brickType BrickType, hits int, width, height, spacingX, spacingY int) *Brick {
 	return &Brick{
-		x:        x,
-		y:        y,
-		color:    color,
-		hits:     hits,
-		active:   true,
-		width:    width,
-		height:   height,
-		spacingX: spacingX,
-		spacingY: spacingY,
+		x:         x,
+		y:         y,
+		brickType: brickType,
+		hits:      hits,
+		active:    true,
+		width:     width,
+		height:    height,
+		spacingX:  spacingX,
+		spacingY:  spacingY,
 	}
 }
 
 // NewBrickFromLevel creates a brick from level data with level's sizing
 func NewBrickFromLevel(levelBrick LevelBrick, width, height, spacingX, spacingY int) *Brick {
 	return &Brick{
-		x:        levelBrick.X,
-		y:        levelBrick.Y,
-		color:    levelBrick.Color,
-		hits:     levelBrick.Hits,
-		active:   true,
-		width:    width,
-		height:   height,
-		spacingX: spacingX,
-		spacingY: spacingY,
+		x:         levelBrick.X,
+		y:         levelBrick.Y,
+		brickType: ParseBrickType(levelBrick.BrickType),
+		hits:      levelBrick.Hits,
+		active:    true,
+		width:     width,
+		height:    height,
+		spacingX:  spacingX,
+		spacingY:  spacingY,
+	}
+}
+
+// ParseBrickType converts a string to a BrickType (for backward compatibility)
+func ParseBrickType(typeStr string) BrickType {
+	switch typeStr {
+	case "green":
+		return BrickTypeGreen
+	case "blue":
+		return BrickTypeBlue
+	case "columbia", "white":
+		return BrickTypeColumbia
+	case "supreme", "pink", "purple":
+		return BrickTypeSupreme
+	case "default", "red", "orange", "yellow":
+		return BrickTypeDefault
+	default:
+		return BrickTypeDefault
 	}
 }
 
@@ -69,9 +98,9 @@ func (b *Brick) Y() int {
 	return b.y
 }
 
-// Color returns the brick's color name
-func (b *Brick) Color() string {
-	return b.color
+// Type returns the brick's type
+func (b *Brick) Type() BrickType {
+	return b.brickType
 }
 
 // Hits returns the remaining hits needed to destroy the brick
@@ -100,7 +129,17 @@ func (b *Brick) Hit() bool {
 
 // GetScreenPosition returns the pixel position of the brick on screen with gaps
 func (b *Brick) GetScreenPosition() (float64, float64) {
-	screenX := float64(b.x * (b.width + b.spacingX))
+	// Calculate the total width needed for bricks (including spacing)
+	// We need to find the maximum X coordinate used to determine total field width
+	// For now, assume a typical field width and center it
+	const screenWidth = 720
+
+	// Calculate center offset to center the brick field on screen
+	// Assume typical brick field spans about 8 bricks wide
+	fieldWidth := float64(8 * (b.width + b.spacingX))
+	centerOffsetX := (screenWidth - fieldWidth) / 2
+
+	screenX := centerOffsetX + float64(b.x*(b.width+b.spacingX))
 	screenY := float64(HUDHeight + b.y*(b.height+b.spacingY))
 	return screenX, screenY
 }
@@ -115,21 +154,19 @@ func (b *Brick) GetBounds() (left, top, right, bottom float64) {
 	return
 }
 
-// GetColor returns the appropriate color for rendering based on the color name
-func (b *Brick) GetColor() color.Color {
-	switch b.color {
-	case "red":
-		return color.RGBA{255, 100, 100, 255}
-	case "orange":
-		return color.RGBA{255, 165, 0, 255}
-	case "yellow":
-		return color.RGBA{255, 255, 100, 255}
-	case "green":
-		return color.RGBA{100, 255, 100, 255}
-	case "blue":
-		return color.RGBA{100, 150, 255, 255}
-	case "purple":
-		return color.RGBA{200, 100, 255, 255}
+// GetDisplayColor returns the appropriate color for rendering based on the brick type
+func (b *Brick) GetDisplayColor() color.Color {
+	switch b.brickType {
+	case BrickTypeDefault:
+		return color.RGBA{255, 100, 100, 255} // red
+	case BrickTypeGreen:
+		return color.RGBA{100, 255, 100, 255} // green
+	case BrickTypeBlue:
+		return color.RGBA{100, 150, 255, 255} // blue
+	case BrickTypeColumbia:
+		return color.RGBA{255, 255, 255, 255} // white
+	case BrickTypeSupreme:
+		return color.RGBA{255, 100, 255, 255} // pink/purple
 	default:
 		return color.RGBA{200, 200, 200, 255} // gray default
 	}

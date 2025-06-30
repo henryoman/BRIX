@@ -1,22 +1,19 @@
 {
   "name": "Level 1 - Easy Start",
-  "brick_width": 120,
-  "brick_height": 60, 
-  "brick_spacing_x": 30,
-  "brick_spacing_y": 25,
-  "ball_speed": 200,
+  "brick_width": 90,
+  "brick_height": 45, 
+  "brick_spacing_x": 40,
+  "brick_spacing_y": 30,
+  "ball_speed": 180,
   "bricks": [
-    {"x": 1, "y": 2, "color": "red", "hits": 1},
-    {"x": 2, "y": 2, "color": "red", "hits": 1},
-    {"x": 3, "y": 2, "color": "orange", "hits": 1},
-    {"x": 4, "y": 2, "color": "orange", "hits": 1},
+    {"x": 2, "y": 2, "bricktype": "default", "hits": 1},
+    {"x": 3, "y": 2, "bricktype": "default", "hits": 1},
+    {"x": 4, "y": 2, "bricktype": "default", "hits": 1},
+    {"x": 5, "y": 2, "bricktype": "default", "hits": 1},
     
-    {"x": 1, "y": 3, "color": "green", "hits": 1},
-    {"x": 2, "y": 3, "color": "green", "hits": 1},
-    {"x": 3, "y": 3, "color": "blue", "hits": 1},
-    {"x": 4, "y": 3, "color": "blue", "hits": 1},
-    
-    {"x": 2, "y": 4, "color": "pink", "hits": 1},
-    {"x": 3, "y": 4, "color": "white", "hits": 1}
+    {"x": 2, "y": 3, "bricktype": "default", "hits": 1},
+    {"x": 3, "y": 3, "bricktype": "default", "hits": 1},
+    {"x": 4, "y": 3, "bricktype": "default", "hits": 1},
+    {"x": 5, "y": 3, "bricktype": "default", "hits": 1}
   ]
 } 

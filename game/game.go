@@ -17,6 +17,7 @@ type GameState int
 const (
 	StateStart GameState = iota
 	StatePlaying
+	StatePaused
 	StateWaitingToContinue
 	StateGameOver
 )
@@ -93,19 +94,19 @@ func (g *Game) loadLevel(levelNum int) error {
 func (g *Game) createFallbackLevel() {
 	g.level = &levels.Level{
 		Name:          "Default Level",
-		BrickWidth:    120,
-		BrickHeight:   60,
-		BrickSpacingX: 30,
-		BrickSpacingY: 25,
+		BrickWidth:    90,
+		BrickHeight:   45,
+		BrickSpacingX: 40,
+		BrickSpacingY: 30,
 		BallSpeed:     200,
 	}
 
 	// Create a simple pattern of bricks with fallback sizing
 	g.bricks = []*entities.Brick{
-		entities.NewBrick(2, 2, "red", 1, 120, 60, 30, 25),
-		entities.NewBrick(3, 2, "red", 1, 120, 60, 30, 25),
-		entities.NewBrick(4, 2, "red", 1, 120, 60, 30, 25),
-		entities.NewBrick(5, 2, "red", 1, 120, 60, 30, 25),
+		entities.NewBrick(2, 2, entities.BrickTypeDefault, 1, 90, 45, 40, 30),
+		entities.NewBrick(3, 2, entities.BrickTypeDefault, 1, 90, 45, 40, 30),
+		entities.NewBrick(4, 2, entities.BrickTypeDefault, 1, 90, 45, 40, 30),
+		entities.NewBrick(5, 2, entities.BrickTypeDefault, 1, 90, 45, 40, 30),
 	}
 }
 
@@ -116,6 +117,8 @@ func (g *Game) Update() error {
 		return g.updateStart()
 	case StatePlaying:
 		return g.updatePlaying()
+	case StatePaused:
+		return g.updatePaused()
 	case StateWaitingToContinue:
 		return g.updateWaitingToContinue()
 	case StateGameOver:
@@ -136,6 +139,12 @@ func (g *Game) updateStart() error {
 
 // updatePlaying handles main game logic
 func (g *Game) updatePlaying() error {
+	// Check for pause input
+	if ebiten.IsKeyPressed(ebiten.KeySpace) {
+		g.state = StatePaused
+		return nil
+	}
+
 	// Update paddle
 	g.paddle.Update()
 
@@ -193,6 +202,17 @@ func (g *Game) updateGameOver() error {
 	return nil
 }
 
+// updatePaused handles pause screen input
+func (g *Game) updatePaused() error {
+	// Check for any input to resume
+	if ebiten.IsKeyPressed(ebiten.KeyLeft) || ebiten.IsKeyPressed(ebiten.KeyRight) ||
+		ebiten.IsKeyPressed(ebiten.KeyA) || ebiten.IsKeyPressed(ebiten.KeyD) ||
+		ebiten.IsKeyPressed(ebiten.KeySpace) || ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+		g.state = StatePlaying
+	}
+	return nil
+}
+
 // Draw implements ebiten.Game interface
 func (g *Game) Draw(screen *ebiten.Image) {
 	switch g.state {
@@ -200,6 +220,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		g.renderer.DrawStartScreen(screen, g.level.Name)
 	case StatePlaying:
 		g.renderer.DrawGame(screen, g.paddle, g.ball, g.bricks, g.level.Name, g.currentLevel, g.score, g.lives)
+	case StatePaused:
+		g.renderer.DrawPauseScreen(screen)
 	case StateWaitingToContinue:
 		g.renderer.DrawWaitingToContinue(screen, g.lives)
 	case StateGameOver:

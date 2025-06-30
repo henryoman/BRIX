@@ -5,6 +5,8 @@ import (
 	_ "embed"
 	"image"
 
+	"brick-breaker/entities"
+
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -89,20 +91,20 @@ func loadImageFromBytes(data []byte) (*ebiten.Image, error) {
 	return ebiten.NewImageFromImage(img), nil
 }
 
-// GetBrickImage returns the appropriate brick sprite based on color
-func (imgs *Images) GetBrickImage(color string) *ebiten.Image {
-	switch color {
-	case "green":
+// GetBrickImage returns the appropriate brick sprite based on brick type
+func (imgs *Images) GetBrickImage(brickType entities.BrickType) *ebiten.Image {
+	switch brickType {
+	case entities.BrickTypeGreen:
 		return imgs.BrickGreen
-	case "blue":
+	case entities.BrickTypeBlue:
 		return imgs.BrickBlue
-	case "columbia", "white":
+	case entities.BrickTypeColumbia:
 		return imgs.BrickColumbia
-	case "supreme", "pink", "purple":
+	case entities.BrickTypeSupreme:
 		return imgs.BrickSupreme
-	case "red", "orange", "yellow":
-		return imgs.Brick // use default brick for red/orange/yellow
+	case entities.BrickTypeDefault:
+		return imgs.Brick
 	default:
-		return imgs.Brick // default brick sprite
+		return imgs.Brick // fallback to default brick sprite
 	}
 }

@@ -125,6 +125,18 @@ func (r *Renderer) DrawWaitingToContinue(screen *ebiten.Image, lives int) {
 	ebitenutil.DebugPrintAt(screen, "Press ANY KEY to Continue", 360-100, 450)
 }
 
+// DrawPauseScreen draws the pause screen
+func (r *Renderer) DrawPauseScreen(screen *ebiten.Image) {
+	// Clear screen with dark background
+	screen.Fill(color.RGBA{0x20, 0x20, 0x30, 0xff})
+
+	// Pause message
+	ebitenutil.DebugPrintAt(screen, "GAME PAUSED", 360-60, 350)
+
+	// Resume instruction
+	ebitenutil.DebugPrintAt(screen, "Press ANY KEY to Resume", 360-100, 450)
+}
+
 // drawBricks draws all active bricks using sprite images
 func (r *Renderer) drawBricks(screen *ebiten.Image, bricks []*entities.Brick) {
 	for _, brick := range bricks {
@@ -133,7 +145,7 @@ func (r *Renderer) drawBricks(screen *ebiten.Image, bricks []*entities.Brick) {
 		}
 
 		brickX, brickY := brick.GetScreenPosition()
-		brickImg := r.images.GetBrickImage(brick.Color())
+		brickImg := r.images.GetBrickImage(brick.Type())
 
 		// Draw brick sprite scaled to the brick's configured size
 		op := &ebiten.DrawImageOptions{}
