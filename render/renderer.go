@@ -137,6 +137,18 @@ func (r *Renderer) DrawPauseScreen(screen *ebiten.Image) {
 	ebitenutil.DebugPrintAt(screen, "Press ANY KEY to Resume", 360-100, 450)
 }
 
+// DrawLevelComplete draws the level complete screen
+func (r *Renderer) DrawLevelComplete(screen *ebiten.Image) {
+	// Clear screen with dark background
+	screen.Fill(color.RGBA{0x20, 0x20, 0x30, 0xff})
+
+	// Level complete message
+	ebitenutil.DebugPrintAt(screen, "LEVEL COMPLETE!", 360-70, 300)
+
+	// Continue instruction
+	ebitenutil.DebugPrintAt(screen, "Press ANY KEY to Continue", 360-100, 450)
+}
+
 // drawBricks draws all active bricks using sprite images
 func (r *Renderer) drawBricks(screen *ebiten.Image, bricks []*entities.Brick) {
 	for _, brick := range bricks {

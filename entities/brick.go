@@ -30,6 +30,9 @@ type Brick struct {
 	// Level-specific sizing (set when brick is created)
 	width, height      int
 	spacingX, spacingY int
+
+	// Field bounds for smart centering (set when brick is created)
+	fieldMinX, fieldMaxX int
 }
 
 // LevelBrick represents a brick definition from level data
@@ -52,6 +55,8 @@ func NewBrick(x, y int, brickType BrickType, hits int, width, height, spacingX, 
 		height:    height,
 		spacingX:  spacingX,
 		spacingY:  spacingY,
+		fieldMinX: 0,
+		fieldMaxX: 7, // default field bounds
 	}
 }
 
@@ -67,6 +72,25 @@ func NewBrickFromLevel(levelBrick LevelBrick, width, height, spacingX, spacingY 
 		height:    height,
 		spacingX:  spacingX,
 		spacingY:  spacingY,
+		fieldMinX: 0,
+		fieldMaxX: 7, // default field bounds
+	}
+}
+
+// NewBrickFromLevelWithBounds creates a brick from level data with calculated field bounds for smart centering
+func NewBrickFromLevelWithBounds(levelBrick LevelBrick, width, height, spacingX, spacingY, fieldMinX, fieldMaxX int) *Brick {
+	return &Brick{
+		x:         levelBrick.X,
+		y:         levelBrick.Y,
+		brickType: ParseBrickType(levelBrick.BrickType),
+		hits:      levelBrick.Hits,
+		active:    true,
+		width:     width,
+		height:    height,
+		spacingX:  spacingX,
+		spacingY:  spacingY,
+		fieldMinX: fieldMinX,
+		fieldMaxX: fieldMaxX,
 	}
 }
 
@@ -127,20 +151,23 @@ func (b *Brick) Hit() bool {
 	return false // brick damaged but not destroyed
 }
 
-// GetScreenPosition returns the pixel position of the brick on screen with gaps
+// GetScreenPosition returns the pixel position of the brick on screen with smart centering
 func (b *Brick) GetScreenPosition() (float64, float64) {
-	// Calculate the total width needed for bricks (including spacing)
-	// We need to find the maximum X coordinate used to determine total field width
-	// For now, assume a typical field width and center it
 	const screenWidth = 720
 
-	// Calculate center offset to center the brick field on screen
-	// Assume typical brick field spans about 8 bricks wide
-	fieldWidth := float64(8 * (b.width + b.spacingX))
-	centerOffsetX := (screenWidth - fieldWidth) / 2
+	// Calculate the total field width based on actual field bounds
+	fieldWidthInBricks := b.fieldMaxX - b.fieldMinX + 1
+	totalFieldWidth := float64(fieldWidthInBricks*b.width + (fieldWidthInBricks-1)*b.spacingX)
 
-	screenX := centerOffsetX + float64(b.x*(b.width+b.spacingX))
+	// Center the field on screen
+	fieldStartX := (screenWidth - totalFieldWidth) / 2
+
+	// Calculate this brick's position relative to the field start
+	brickOffsetFromFieldStart := float64((b.x - b.fieldMinX) * (b.width + b.spacingX))
+
+	screenX := fieldStartX + brickOffsetFromFieldStart
 	screenY := float64(HUDHeight + b.y*(b.height+b.spacingY))
+
 	return screenX, screenY
 }
 

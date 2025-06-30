@@ -17,10 +17,21 @@ func NewBall() *Ball {
 	return NewBallWithSpeed(240) // default speed
 }
 
-// NewBallWithSpeed creates a new ball with configurable speed
+// NewBallWithSpeed creates a new ball with configurable speed positioned at screen center
 func NewBallWithSpeed(speed float64) *Ball {
 	return &Ball{
 		x:     ScreenWidth / 2,
+		y:     PaddleY - 40,
+		vx:    speed,
+		vy:    -speed,
+		speed: speed,
+	}
+}
+
+// NewBallAbovePaddle creates a new ball positioned above the paddle with configurable speed
+func NewBallAbovePaddle(paddleX float64, speed float64) *Ball {
+	return &Ball{
+		x:     paddleX, // position above the paddle's current location
 		y:     PaddleY - 40,
 		vx:    speed,
 		vy:    -speed,

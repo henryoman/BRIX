@@ -18,6 +18,7 @@ const (
 	StateStart GameState = iota
 	StatePlaying
 	StatePaused
+	StateLevelComplete
 	StateWaitingToContinue
 	StateGameOver
 )
@@ -64,8 +65,8 @@ func NewGame() *Game {
 		game.createFallbackLevel()
 	}
 
-	// Create ball with level's speed
-	game.ball = entities.NewBallWithSpeed(game.level.BallSpeed)
+	// Create ball with level's speed positioned above paddle
+	game.ball = entities.NewBallAbovePaddle(game.paddle.X(), game.level.BallSpeed)
 
 	return game
 }
@@ -80,14 +81,39 @@ func (g *Game) loadLevel(levelNum int) error {
 	g.level = level
 	g.bricks = make([]*entities.Brick, len(level.Bricks))
 
-	// Convert level bricks to game entities with level's sizing
+	// Calculate the brick field bounds for proper centering
+	minX, maxX := g.calculateBrickFieldBounds(level)
+
+	// Convert level bricks to game entities with level's sizing and field bounds
 	for i, levelBrick := range level.Bricks {
-		g.bricks[i] = entities.NewBrickFromLevel(levelBrick,
-			level.BrickWidth, level.BrickHeight, level.BrickSpacingX, level.BrickSpacingY)
+		g.bricks[i] = entities.NewBrickFromLevelWithBounds(levelBrick,
+			level.BrickWidth, level.BrickHeight, level.BrickSpacingX, level.BrickSpacingY,
+			minX, maxX)
 	}
 
 	log.Printf("Level loaded: %s with %d bricks", level.Name, len(g.bricks))
 	return nil
+}
+
+// calculateBrickFieldBounds calculates the minimum and maximum X coordinates used in the level
+func (g *Game) calculateBrickFieldBounds(level *levels.Level) (int, int) {
+	if len(level.Bricks) == 0 {
+		return 0, 0
+	}
+
+	minX := level.Bricks[0].X
+	maxX := level.Bricks[0].X
+
+	for _, brick := range level.Bricks {
+		if brick.X < minX {
+			minX = brick.X
+		}
+		if brick.X > maxX {
+			maxX = brick.X
+		}
+	}
+
+	return minX, maxX
 }
 
 // createFallbackLevel creates a simple level if loading fails
@@ -102,11 +128,12 @@ func (g *Game) createFallbackLevel() {
 	}
 
 	// Create a simple pattern of bricks with fallback sizing
+	// Field bounds: min=2, max=5 (4 bricks wide)
 	g.bricks = []*entities.Brick{
-		entities.NewBrick(2, 2, entities.BrickTypeDefault, 1, 90, 45, 40, 30),
-		entities.NewBrick(3, 2, entities.BrickTypeDefault, 1, 90, 45, 40, 30),
-		entities.NewBrick(4, 2, entities.BrickTypeDefault, 1, 90, 45, 40, 30),
-		entities.NewBrick(5, 2, entities.BrickTypeDefault, 1, 90, 45, 40, 30),
+		entities.NewBrickFromLevelWithBounds(entities.LevelBrick{X: 2, Y: 2, BrickType: "default", Hits: 1}, 90, 45, 40, 30, 2, 5),
+		entities.NewBrickFromLevelWithBounds(entities.LevelBrick{X: 3, Y: 2, BrickType: "default", Hits: 1}, 90, 45, 40, 30, 2, 5),
+		entities.NewBrickFromLevelWithBounds(entities.LevelBrick{X: 4, Y: 2, BrickType: "default", Hits: 1}, 90, 45, 40, 30, 2, 5),
+		entities.NewBrickFromLevelWithBounds(entities.LevelBrick{X: 5, Y: 2, BrickType: "default", Hits: 1}, 90, 45, 40, 30, 2, 5),
 	}
 }
 
@@ -119,6 +146,8 @@ func (g *Game) Update() error {
 		return g.updatePlaying()
 	case StatePaused:
 		return g.updatePaused()
+	case StateLevelComplete:
+		return g.updateLevelComplete()
 	case StateWaitingToContinue:
 		return g.updateWaitingToContinue()
 	case StateGameOver:
@@ -176,7 +205,7 @@ func (g *Game) updatePlaying() error {
 
 	if activeBricks == 0 {
 		// Level complete - could advance to next level here
-		g.state = StateGameOver
+		g.state = StateLevelComplete
 	}
 
 	return nil
@@ -190,7 +219,7 @@ func (g *Game) updateWaitingToContinue() error {
 		ebiten.IsKeyPressed(ebiten.KeySpace) || ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 
 		// Reset ball position and continue playing (life already decremented)
-		g.ball = entities.NewBallWithSpeed(g.level.BallSpeed)
+		g.ball = entities.NewBallAbovePaddle(g.paddle.X(), g.level.BallSpeed)
 		g.state = StatePlaying
 	}
 	return nil
@@ -213,6 +242,30 @@ func (g *Game) updatePaused() error {
 	return nil
 }
 
+// updateLevelComplete handles level complete state
+func (g *Game) updateLevelComplete() error {
+	// Check for any input to advance to next level
+	if ebiten.IsKeyPressed(ebiten.KeyLeft) || ebiten.IsKeyPressed(ebiten.KeyRight) ||
+		ebiten.IsKeyPressed(ebiten.KeyA) || ebiten.IsKeyPressed(ebiten.KeyD) ||
+		ebiten.IsKeyPressed(ebiten.KeySpace) || ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+
+		// Try to advance to the next level
+		nextLevel := g.currentLevel + 1
+		if err := g.loadLevel(nextLevel); err != nil {
+			// No more levels - game complete!
+			log.Printf("No level %d found, game complete!", nextLevel)
+			g.state = StateGameOver
+		} else {
+			// Successfully loaded next level
+			g.currentLevel = nextLevel
+			g.ball = entities.NewBallAbovePaddle(g.paddle.X(), g.level.BallSpeed)
+			g.state = StatePlaying
+			log.Printf("Advanced to level %d", nextLevel)
+		}
+	}
+	return nil
+}
+
 // Draw implements ebiten.Game interface
 func (g *Game) Draw(screen *ebiten.Image) {
 	switch g.state {
@@ -222,6 +275,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		g.renderer.DrawGame(screen, g.paddle, g.ball, g.bricks, g.level.Name, g.currentLevel, g.score, g.lives)
 	case StatePaused:
 		g.renderer.DrawPauseScreen(screen)
+	case StateLevelComplete:
+		g.renderer.DrawLevelComplete(screen)
 	case StateWaitingToContinue:
 		g.renderer.DrawWaitingToContinue(screen, g.lives)
 	case StateGameOver:

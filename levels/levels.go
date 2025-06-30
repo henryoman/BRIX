@@ -42,10 +42,10 @@ func CreateDefaultLevel() *Level {
 	return &Level{
 		Name: "Default Level",
 		Bricks: []entities.LevelBrick{
-			{X: 4, Y: 2, Color: "red", Hits: 1},
-			{X: 5, Y: 2, Color: "red", Hits: 1},
-			{X: 6, Y: 2, Color: "red", Hits: 1},
-			{X: 7, Y: 2, Color: "red", Hits: 1},
+			{X: 4, Y: 2, BrickType: "default", Hits: 1},
+			{X: 5, Y: 2, BrickType: "default", Hits: 1},
+			{X: 6, Y: 2, BrickType: "default", Hits: 1},
+			{X: 7, Y: 2, BrickType: "default", Hits: 1},
 		},
 	}
 }
