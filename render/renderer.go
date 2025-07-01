@@ -3,6 +3,7 @@ package render
 import (
 	"fmt"
 	"image/color"
+	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text"
@@ -28,15 +29,35 @@ func NewRenderer() (*Renderer, error) {
 		return nil, fmt.Errorf("failed to load images: %v", err)
 	}
 
-	// Load font
-	tt, err := opentype.Parse(goregular.TTF)
+	// --- Attempt to load Times New Roman ---
+	var ttfBytes []byte
+	fontCandidates := []string{
+		"/System/Library/Fonts/Supplemental/Times New Roman.ttf",      // macOS Ventura +
+		"/Library/Fonts/Times New Roman.ttf",                          // older macOS
+		"/usr/share/fonts/truetype/msttcorefonts/Times_New_Roman.ttf", // Linux w/ msttcorefonts
+		"assets/fonts/Times New Roman.ttf",                            // bundled fallback
+	}
+
+	for _, path := range fontCandidates {
+		if data, err := os.ReadFile(path); err == nil {
+			ttfBytes = data
+			break
+		}
+	}
+
+	if ttfBytes == nil {
+		// Fallback to Go Regular if TNR not found
+		ttfBytes = goregular.TTF
+	}
+
+	tt, err := opentype.Parse(ttfBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse font: %v", err)
 	}
 
 	const dpi = 72
 	fontFace, err := opentype.NewFace(tt, &opentype.FaceOptions{
-		Size:    20, // Larger font size
+		Size:    20, // HUD font size
 		DPI:     dpi,
 		Hinting: font.HintingFull,
 	})
@@ -57,8 +78,8 @@ func (r *Renderer) drawText(screen *ebiten.Image, str string, x, y int, clr colo
 
 // DrawStartScreen draws the start screen
 func (r *Renderer) DrawStartScreen(screen *ebiten.Image, levelName string) {
-	// Clear screen with dark background
-	screen.Fill(color.RGBA{0x20, 0x20, 0x30, 0xff})
+	// Clear screen with black background
+	screen.Fill(color.Black)
 
 	// Simple, readable title
 	r.drawText(screen, "BRICK BREAKER", 360-80, 170, color.White)
@@ -126,8 +147,8 @@ func (r *Renderer) DrawGame(screen *ebiten.Image, paddle *entities.Paddle, ball 
 
 // DrawGameOver draws the game over screen
 func (r *Renderer) DrawGameOver(screen *ebiten.Image, score int) {
-	// Clear screen
-	screen.Fill(color.RGBA{0x20, 0x20, 0x30, 0xff})
+	// Clear screen with black background
+	screen.Fill(color.Black)
 
 	// Game Over text
 	r.drawText(screen, "GAME OVER", 360-50, 220, color.White)
@@ -139,8 +160,8 @@ func (r *Renderer) DrawGameOver(screen *ebiten.Image, score int) {
 
 // DrawWaitingToContinue draws the waiting to continue screen
 func (r *Renderer) DrawWaitingToContinue(screen *ebiten.Image, lives int) {
-	// Clear screen with dark background
-	screen.Fill(color.RGBA{0x20, 0x20, 0x30, 0xff})
+	// Clear screen with black background
+	screen.Fill(color.Black)
 
 	// Ball lost message
 	r.drawText(screen, "BALL LOST!", 360-50, 200, color.White)
@@ -155,8 +176,8 @@ func (r *Renderer) DrawWaitingToContinue(screen *ebiten.Image, lives int) {
 
 // DrawPauseScreen draws the pause screen
 func (r *Renderer) DrawPauseScreen(screen *ebiten.Image) {
-	// Clear screen with dark background
-	screen.Fill(color.RGBA{0x20, 0x20, 0x30, 0xff})
+	// Clear screen with black background
+	screen.Fill(color.Black)
 
 	// Pause message
 	r.drawText(screen, "GAME PAUSED", 360-60, 220, color.White)
@@ -167,8 +188,8 @@ func (r *Renderer) DrawPauseScreen(screen *ebiten.Image) {
 
 // DrawLevelComplete draws the level complete screen
 func (r *Renderer) DrawLevelComplete(screen *ebiten.Image) {
-	// Clear screen with dark background
-	screen.Fill(color.RGBA{0x20, 0x20, 0x30, 0xff})
+	// Clear screen with black background
+	screen.Fill(color.Black)
 
 	// Level complete message
 	r.drawText(screen, "LEVEL COMPLETE!", 360-70, 220, color.White)

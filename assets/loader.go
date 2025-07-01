@@ -33,22 +33,18 @@ var brickSupremePNG []byte
 
 // Embed level background images
 //
-//go:embed levels/level1.png
-var level1BackgroundPNG []byte
-
-//go:embed levels/level2.png
-var level2BackgroundPNG []byte
+//go:embed levels/level.png
+var levelBackgroundPNG []byte
 
 // Images holds all loaded game sprites
 type Images struct {
-	Paddle           *ebiten.Image
-	Brick            *ebiten.Image
-	BrickGreen       *ebiten.Image
-	BrickBlue        *ebiten.Image
-	BrickColumbia    *ebiten.Image
-	BrickSupreme     *ebiten.Image
-	Level1Background *ebiten.Image
-	Level2Background *ebiten.Image
+	Paddle          *ebiten.Image
+	Brick           *ebiten.Image
+	BrickGreen      *ebiten.Image
+	BrickBlue       *ebiten.Image
+	BrickColumbia   *ebiten.Image
+	BrickSupreme    *ebiten.Image
+	LevelBackground *ebiten.Image
 }
 
 // LoadImages loads all embedded sprites into memory
@@ -83,25 +79,19 @@ func LoadImages() (*Images, error) {
 		return nil, err
 	}
 
-	level1Background, err := loadImageFromBytes(level1BackgroundPNG)
-	if err != nil {
-		return nil, err
-	}
-
-	level2Background, err := loadImageFromBytes(level2BackgroundPNG)
+	levelBackground, err := loadImageFromBytes(levelBackgroundPNG)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Images{
-		Paddle:           paddle,
-		Brick:            brick,
-		BrickGreen:       brickGreen,
-		BrickBlue:        brickBlue,
-		BrickColumbia:    brickColumbia,
-		BrickSupreme:     brickSupreme,
-		Level1Background: level1Background,
-		Level2Background: level2Background,
+		Paddle:          paddle,
+		Brick:           brick,
+		BrickGreen:      brickGreen,
+		BrickBlue:       brickBlue,
+		BrickColumbia:   brickColumbia,
+		BrickSupreme:    brickSupreme,
+		LevelBackground: levelBackground,
 	}, nil
 }
 
@@ -134,12 +124,6 @@ func (imgs *Images) GetBrickImage(brickType entities.BrickType) *ebiten.Image {
 
 // GetLevelBackground returns the appropriate level background image
 func (imgs *Images) GetLevelBackground(levelNum int) *ebiten.Image {
-	switch levelNum {
-	case 1:
-		return imgs.Level1Background
-	case 2:
-		return imgs.Level2Background
-	default:
-		return imgs.Level1Background // fallback to level 1
-	}
+	// Always return the generic background regardless of level number
+	return imgs.LevelBackground
 }
