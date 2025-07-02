@@ -78,6 +78,12 @@ func (g *Game) loadLevel(levelNum int) error {
 		return err
 	}
 
+	// Guarantee score baseline: at least 1000 points per level number.
+	baseline := levelNum * 1000
+	if g.score < baseline {
+		g.score = baseline
+	}
+
 	g.level = level
 	g.bricks = make([]*entities.Brick, len(level.Bricks))
 
@@ -181,7 +187,7 @@ func (g *Game) updatePlaying() error {
 	g.ball.Update()
 
 	// Check collisions
-	g.physics.CheckPaddleCollision(g.ball, g.paddle, &g.score)
+	g.physics.CheckPaddleCollision(g.ball, g.paddle, &g.score, g.lives)
 	g.physics.CheckBrickCollisions(g.ball, g.bricks, &g.score, g.lives)
 	g.physics.CheckWallCollisions(g.ball)
 

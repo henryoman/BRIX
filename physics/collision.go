@@ -1,8 +1,10 @@
 package physics
 
 import (
+	"brick-breaker/config"
 	"brick-breaker/entities"
 	"math"
+	"strconv"
 )
 
 // CollisionSystem handles all collision detection in the game
@@ -14,7 +16,7 @@ func NewCollisionSystem() *CollisionSystem {
 }
 
 // CheckPaddleCollision checks if the ball collides with the paddle
-func (cs *CollisionSystem) CheckPaddleCollision(ball *entities.Ball, paddle *entities.Paddle, score *int) {
+func (cs *CollisionSystem) CheckPaddleCollision(ball *entities.Ball, paddle *entities.Paddle, score *int, lives int) {
 	if ball.VY() <= 0 {
 		return // ball moving upward, no collision possible
 	}
@@ -59,13 +61,16 @@ func (cs *CollisionSystem) CheckPaddleCollision(ball *entities.Ball, paddle *ent
 
 		ball.SetVelocity(newVX, newVY)
 
-		*score += 10 // Add points for hitting paddle
+		key := strconv.Itoa(lives)
+		pts := config.Score.PaddleHit[key]
+		*score += pts
 	}
 }
 
 // CheckBrickCollisions checks if the ball collides with any bricks
 func (cs *CollisionSystem) CheckBrickCollisions(ball *entities.Ball, bricks []*entities.Brick, score *int, lives int) {
 	ballLeft, ballTop, ballRight, ballBottom := ball.GetBounds()
+	// _ = lives // (lives still used in scoring calc)
 
 	for _, brick := range bricks {
 		if !brick.IsActive() {
@@ -81,23 +86,16 @@ func (cs *CollisionSystem) CheckBrickCollisions(ball *entities.Ball, bricks []*e
 			// Hit the brick
 			destroyed := brick.Hit()
 
-			// Calculate points based on lives remaining
-			var points int
-			switch lives {
-			case 3:
-				points = 20
-			case 2:
-				points = 10
-			case 1:
-				points = 5
-			default:
-				points = 5 // fallback for any edge case
-			}
+			livesKey := strconv.Itoa(lives)
+			brickKey := string(brick.Type())
+
+			hitPts := config.Score.BrickHit[brickKey][livesKey]
+			destroyPts := config.Score.BrickDestroy[brickKey][livesKey]
 
 			if destroyed {
-				*score += points // Points for destroying a brick based on lives
+				*score += destroyPts
 			} else {
-				*score += points / 2 // Half points for just hitting a brick
+				*score += hitPts
 			}
 
 			// Determine collision direction and bounce ball

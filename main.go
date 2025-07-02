@@ -5,12 +5,18 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 
+	"brick-breaker/config"
 	"brick-breaker/game"
 )
 
 func main() {
 	ebiten.SetWindowSize(720, 540)
 	ebiten.SetWindowTitle("Brick Breaker")
+
+	// Load brick & scoring configs
+	if err := config.Load(); err != nil {
+		log.Fatalf("failed to load config: %v", err)
+	}
 
 	g := game.NewGame()
 
