@@ -126,20 +126,19 @@ func (g *Game) calculateBrickFieldBounds(level *levels.Level) (int, int) {
 func (g *Game) createFallbackLevel() {
 	g.level = &levels.Level{
 		Name:          "Default Level",
-		BrickWidth:    90,
-		BrickHeight:   45,
+		BrickWidth:    75,
+		BrickHeight:   30,
 		BrickSpacingX: 40,
 		BrickSpacingY: 30,
 		BallSpeed:     200,
 	}
 
 	// Create a simple pattern of bricks with fallback sizing
-	// Field bounds: min=2, max=5 (4 bricks wide)
 	g.bricks = []*entities.Brick{
-		entities.NewBrickFromLevelWithBounds(entities.LevelBrick{X: 2, Y: 2, BrickType: "default", Hits: 1}, 90, 45, 40, 30, 2, 5),
-		entities.NewBrickFromLevelWithBounds(entities.LevelBrick{X: 3, Y: 2, BrickType: "default", Hits: 1}, 90, 45, 40, 30, 2, 5),
-		entities.NewBrickFromLevelWithBounds(entities.LevelBrick{X: 4, Y: 2, BrickType: "default", Hits: 1}, 90, 45, 40, 30, 2, 5),
-		entities.NewBrickFromLevelWithBounds(entities.LevelBrick{X: 5, Y: 2, BrickType: "default", Hits: 1}, 90, 45, 40, 30, 2, 5),
+		entities.NewBrickFromLevelWithBounds(entities.LevelBrick{X: 2, Y: 2, BrickType: "standard", Hits: 1}, 75, 30, 40, 30, 2, 5),
+		entities.NewBrickFromLevelWithBounds(entities.LevelBrick{X: 3, Y: 2, BrickType: "standard", Hits: 1}, 75, 30, 40, 30, 2, 5),
+		entities.NewBrickFromLevelWithBounds(entities.LevelBrick{X: 4, Y: 2, BrickType: "standard", Hits: 1}, 75, 30, 40, 30, 2, 5),
+		entities.NewBrickFromLevelWithBounds(entities.LevelBrick{X: 5, Y: 2, BrickType: "standard", Hits: 1}, 75, 30, 40, 30, 2, 5),
 	}
 }
 

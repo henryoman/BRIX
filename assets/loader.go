@@ -4,7 +4,7 @@ import (
 	"bytes"
 	_ "embed"
 	"image"
-	_ "image/png" // Import PNG decoder
+	_ "image/png"
 
 	"brick-breaker/entities"
 
@@ -12,18 +12,21 @@ import (
 )
 
 // Embed all sprite files
-//
+
 //go:embed paddles/paddle.png
 var paddlePNG []byte
 
-//go:embed bricks/brick.png
-var brickPNG []byte
+// NOTE: Currently, the generic brick.png sprite is reused for the new brick variants.
+// Replace these files with real sprites of identical names when available.
 
-//go:embed bricks/brick-green.png
-var brickGreenPNG []byte
+//go:embed bricks/brick-standard.png
+var brickStandardPNG []byte
 
-//go:embed bricks/brick-blue.png
-var brickBluePNG []byte
+//go:embed bricks/brick-tusi.png
+var brickTusiPNG []byte
+
+//go:embed bricks/brick-weed.png
+var brickWeedPNG []byte
 
 //go:embed bricks/brick-columbia.png
 var brickColumbiaPNG []byte
@@ -31,40 +34,38 @@ var brickColumbiaPNG []byte
 //go:embed bricks/brick-supreme.png
 var brickSupremePNG []byte
 
-// Embed level background images
+// Embed level background
 //
 //go:embed levels/level.png
 var levelBackgroundPNG []byte
 
-// Images holds all loaded game sprites
 type Images struct {
 	Paddle          *ebiten.Image
-	Brick           *ebiten.Image
-	BrickGreen      *ebiten.Image
-	BrickBlue       *ebiten.Image
+	BrickStandard   *ebiten.Image
 	BrickColumbia   *ebiten.Image
 	BrickSupreme    *ebiten.Image
+	BrickTusi       *ebiten.Image
+	BrickWeed       *ebiten.Image
 	LevelBackground *ebiten.Image
 }
 
-// LoadImages loads all embedded sprites into memory
 func LoadImages() (*Images, error) {
 	paddle, err := loadImageFromBytes(paddlePNG)
 	if err != nil {
 		return nil, err
 	}
 
-	brick, err := loadImageFromBytes(brickPNG)
+	brickStandard, err := loadImageFromBytes(brickStandardPNG)
 	if err != nil {
 		return nil, err
 	}
 
-	brickGreen, err := loadImageFromBytes(brickGreenPNG)
+	brickTusi, err := loadImageFromBytes(brickTusiPNG)
 	if err != nil {
 		return nil, err
 	}
 
-	brickBlue, err := loadImageFromBytes(brickBluePNG)
+	brickWeed, err := loadImageFromBytes(brickWeedPNG)
 	if err != nil {
 		return nil, err
 	}
@@ -86,16 +87,15 @@ func LoadImages() (*Images, error) {
 
 	return &Images{
 		Paddle:          paddle,
-		Brick:           brick,
-		BrickGreen:      brickGreen,
-		BrickBlue:       brickBlue,
+		BrickStandard:   brickStandard,
 		BrickColumbia:   brickColumbia,
 		BrickSupreme:    brickSupreme,
+		BrickTusi:       brickTusi,
+		BrickWeed:       brickWeed,
 		LevelBackground: levelBackground,
 	}, nil
 }
 
-// loadImageFromBytes converts embedded PNG bytes to ebiten.Image
 func loadImageFromBytes(data []byte) (*ebiten.Image, error) {
 	img, _, err := image.Decode(bytes.NewReader(data))
 	if err != nil {
@@ -104,26 +104,23 @@ func loadImageFromBytes(data []byte) (*ebiten.Image, error) {
 	return ebiten.NewImageFromImage(img), nil
 }
 
-// GetBrickImage returns the appropriate brick sprite based on brick type
 func (imgs *Images) GetBrickImage(brickType entities.BrickType) *ebiten.Image {
 	switch brickType {
-	case entities.BrickTypeGreen:
-		return imgs.BrickGreen
-	case entities.BrickTypeBlue:
-		return imgs.BrickBlue
 	case entities.BrickTypeColumbia:
 		return imgs.BrickColumbia
 	case entities.BrickTypeSupreme:
 		return imgs.BrickSupreme
-	case entities.BrickTypeDefault:
-		return imgs.Brick
+	case entities.BrickTypeTusi:
+		return imgs.BrickTusi
+	case entities.BrickTypeWeed:
+		return imgs.BrickWeed
+	case entities.BrickTypeStandard:
+		fallthrough
 	default:
-		return imgs.Brick // fallback to default brick sprite
+		return imgs.BrickStandard
 	}
 }
 
-// GetLevelBackground returns the appropriate level background image
 func (imgs *Images) GetLevelBackground(levelNum int) *ebiten.Image {
-	// Always return the generic background regardless of level number
 	return imgs.LevelBackground
 }

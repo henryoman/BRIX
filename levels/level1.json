@@ -1,14 +1,14 @@
 {
   "name": "Level 1",
-  "brick_width": 90,
-  "brick_height": 45, 
+  "brick_width": 75,
+  "brick_height": 30,
   "brick_spacing_x": 25,
   "brick_spacing_y": 30,
   "ball_speed": 180,
   "bricks": [
-    {"x": 2, "y": 2, "bricktype": "default", "hits": 1},
-    {"x": 3, "y": 2, "bricktype": "default", "hits": 1},
-    {"x": 4, "y": 2, "bricktype": "default", "hits": 1},
-    {"x": 5, "y": 2, "bricktype": "default", "hits": 1}
+    {"x": 2, "y": 2, "bricktype": "standard", "hits": 1},
+    {"x": 3, "y": 2, "bricktype": "standard", "hits": 1},
+    {"x": 4, "y": 2, "bricktype": "standard", "hits": 1},
+    {"x": 5, "y": 2, "bricktype": "standard", "hits": 1}
   ]
 } 

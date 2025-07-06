@@ -1,30 +1,16 @@
 {
-  "default": {
-    "name": "Default",
-    "sprite": "brick.png",
+  "standard": {
+    "name": "Standard",
+    "sprite": "brick-standard.png",
     "hits": 1,
     "speedFactor": 1.0,
     "powerUp": "none"
-  },
-  "green": {
-    "name": "Green",
-    "sprite": "brick-green.png",
-    "hits": 1,
-    "speedFactor": 1.0,
-    "powerUp": "none"
-  },
-  "blue": {
-    "name": "Blue",
-    "sprite": "brick-blue.png",
-    "hits": 2,
-    "speedFactor": 1.05,
-    "powerUp": "expand-paddle"
   },
   "columbia": {
     "name": "Columbia",
     "sprite": "brick-columbia.png",
     "hits": 2,
-    "speedFactor": 1.0,
+    "speedFactor": 1.05,
     "powerUp": "none"
   },
   "supreme": {
@@ -33,5 +19,19 @@
     "hits": 3,
     "speedFactor": 1.1,
     "powerUp": "slow-ball"
+  },
+  "tusi": {
+    "name": "Tusi",
+    "sprite": "brick-tusi.png",
+    "hits": 1,
+    "speedFactor": 1.0,
+    "powerUp": "none"
+  },
+  "weed": {
+    "name": "Weed",
+    "sprite": "brick-weed.png",
+    "hits": 2,
+    "speedFactor": 1.05,
+    "powerUp": "expand-paddle"
   }
 } 

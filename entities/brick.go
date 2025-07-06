@@ -13,9 +13,9 @@ const (
 type BrickType string
 
 const (
-	BrickTypeDefault  BrickType = "default"  // brick.png - red/orange/yellow
-	BrickTypeGreen    BrickType = "green"    // brick-green.png
-	BrickTypeBlue     BrickType = "blue"     // brick-blue.png
+	BrickTypeStandard BrickType = "standard" // brick-standard.png
+	BrickTypeTusi     BrickType = "tusi"     // brick-tusi.png
+	BrickTypeWeed     BrickType = "weed"     // brick-weed.png
 	BrickTypeColumbia BrickType = "columbia" // brick-columbia.png - white
 	BrickTypeSupreme  BrickType = "supreme"  // brick-supreme.png - pink/purple
 )
@@ -97,18 +97,18 @@ func NewBrickFromLevelWithBounds(levelBrick LevelBrick, width, height, spacingX,
 // ParseBrickType converts a string to a BrickType (for backward compatibility)
 func ParseBrickType(typeStr string) BrickType {
 	switch typeStr {
-	case "green":
-		return BrickTypeGreen
-	case "blue":
-		return BrickTypeBlue
 	case "columbia", "white":
 		return BrickTypeColumbia
 	case "supreme", "pink", "purple":
 		return BrickTypeSupreme
-	case "default", "red", "orange", "yellow":
-		return BrickTypeDefault
+	case "tusi", "green":
+		return BrickTypeTusi
+	case "weed", "blue", "cyan":
+		return BrickTypeWeed
+	case "standard", "default", "red", "orange", "yellow":
+		return BrickTypeStandard
 	default:
-		return BrickTypeDefault
+		return BrickTypeStandard
 	}
 }
 
@@ -183,16 +183,16 @@ func (b *Brick) GetBounds() (left, top, right, bottom float64) {
 // GetDisplayColor returns the appropriate color for rendering based on the brick type
 func (b *Brick) GetDisplayColor() color.Color {
 	switch b.brickType {
-	case BrickTypeDefault:
-		return color.RGBA{255, 100, 100, 255} // red
-	case BrickTypeGreen:
-		return color.RGBA{100, 255, 100, 255} // green
-	case BrickTypeBlue:
-		return color.RGBA{100, 150, 255, 255} // blue
+	case BrickTypeStandard:
+		return color.RGBA{255, 100, 100, 255} // red-ish standard
+	case BrickTypeTusi:
+		return color.RGBA{255, 140, 255, 255} // tusi pinkish
+	case BrickTypeWeed:
+		return color.RGBA{100, 255, 100, 255} // green weed
 	case BrickTypeColumbia:
 		return color.RGBA{255, 255, 255, 255} // white
 	case BrickTypeSupreme:
-		return color.RGBA{255, 100, 255, 255} // pink/purple
+		return color.RGBA{255, 100, 255, 255} // pink/purple supreme
 	default:
 		return color.RGBA{200, 200, 200, 255} // gray default
 	}

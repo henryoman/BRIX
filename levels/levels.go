@@ -48,12 +48,16 @@ func LoadLevel(levelNum int) (*Level, error) {
 // CreateDefaultLevel creates a simple default level for fallback
 func CreateDefaultLevel() *Level {
 	return &Level{
-		Name: "Default Level",
+		Name:          "Default Level",
+		BrickWidth:    75,
+		BrickHeight:   30,
+		BrickSpacingX: 25,
+		BrickSpacingY: 30,
 		Bricks: []entities.LevelBrick{
-			{X: 4, Y: 2, BrickType: "default", Hits: 1},
-			{X: 5, Y: 2, BrickType: "default", Hits: 1},
-			{X: 6, Y: 2, BrickType: "default", Hits: 1},
-			{X: 7, Y: 2, BrickType: "default", Hits: 1},
+			{X: 4, Y: 2, BrickType: "standard", Hits: 1},
+			{X: 5, Y: 2, BrickType: "standard", Hits: 1},
+			{X: 6, Y: 2, BrickType: "standard", Hits: 1},
+			{X: 7, Y: 2, BrickType: "standard", Hits: 1},
 		},
 	}
 }
