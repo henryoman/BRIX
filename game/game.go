@@ -175,7 +175,7 @@ func (g *Game) updateStart() error {
 // updatePlaying handles main game logic
 func (g *Game) updatePlaying() error {
 	// Check for pause input
-	if ebiten.IsKeyPressed(ebiten.KeySpace) {
+	if ebiten.IsKeyPressed(ebiten.KeySpace) || ebiten.IsKeyPressed(ebiten.KeyEnter) {
 		g.state = StatePaused
 		return nil
 	}
@@ -222,7 +222,7 @@ func (g *Game) updateWaitingToContinue() error {
 	// Check for any input to continue
 	if ebiten.IsKeyPressed(ebiten.KeyLeft) || ebiten.IsKeyPressed(ebiten.KeyRight) ||
 		ebiten.IsKeyPressed(ebiten.KeyA) || ebiten.IsKeyPressed(ebiten.KeyD) ||
-		ebiten.IsKeyPressed(ebiten.KeySpace) || ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+		ebiten.IsKeyPressed(ebiten.KeySpace) || ebiten.IsKeyPressed(ebiten.KeyEnter) || ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 
 		// Reset ball position and continue playing (life already decremented)
 		g.ball = entities.NewBallAbovePaddle(g.paddle.X(), g.level.BallSpeed)
@@ -242,7 +242,7 @@ func (g *Game) updatePaused() error {
 	// Check for any input to resume
 	if ebiten.IsKeyPressed(ebiten.KeyLeft) || ebiten.IsKeyPressed(ebiten.KeyRight) ||
 		ebiten.IsKeyPressed(ebiten.KeyA) || ebiten.IsKeyPressed(ebiten.KeyD) ||
-		ebiten.IsKeyPressed(ebiten.KeySpace) || ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+		ebiten.IsKeyPressed(ebiten.KeySpace) || ebiten.IsKeyPressed(ebiten.KeyEnter) || ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 		g.state = StatePlaying
 	}
 	return nil
@@ -253,7 +253,7 @@ func (g *Game) updateLevelComplete() error {
 	// Check for any input to advance to next level
 	if ebiten.IsKeyPressed(ebiten.KeyLeft) || ebiten.IsKeyPressed(ebiten.KeyRight) ||
 		ebiten.IsKeyPressed(ebiten.KeyA) || ebiten.IsKeyPressed(ebiten.KeyD) ||
-		ebiten.IsKeyPressed(ebiten.KeySpace) || ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+		ebiten.IsKeyPressed(ebiten.KeySpace) || ebiten.IsKeyPressed(ebiten.KeyEnter) || ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 
 		// Try to advance to the next level
 		nextLevel := g.currentLevel + 1
