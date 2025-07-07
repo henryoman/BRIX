@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="logo.png" alt="Logo" width="600"/>
+  <img src="logo.png" alt="Logo" width="400"/>
 </div>
 
 <h3 align="center">BRIX</h3>
