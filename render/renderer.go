@@ -236,6 +236,12 @@ func (r *Renderer) drawBricks(screen *ebiten.Image, bricks []*entities.Brick) {
 // drawPaddle draws the paddle using sprite image
 func (r *Renderer) drawPaddle(screen *ebiten.Image, paddle *entities.Paddle) {
 	op := &ebiten.DrawImageOptions{}
+
+	imgBounds := r.images.Paddle.Bounds()
+	scaleX := paddle.Width() / float64(imgBounds.Dx())
+	scaleY := paddle.Height() / float64(imgBounds.Dy())
+	op.GeoM.Scale(scaleX, scaleY)
+
 	op.GeoM.Translate(paddle.X()-paddle.Width()/2, paddle.Y())
 	screen.DrawImage(r.images.Paddle, op)
 }

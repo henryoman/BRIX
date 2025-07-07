@@ -16,6 +16,9 @@ import (
 //go:embed paddles/paddle.png
 var paddlePNG []byte
 
+//go:embed paddles/paddle-silver.png
+var paddleSilverPNG []byte
+
 // NOTE: Currently, the generic brick.png sprite is reused for the new brick variants.
 // Replace these files with real sprites of identical names when available.
 
@@ -50,9 +53,13 @@ type Images struct {
 }
 
 func LoadImages() (*Images, error) {
-	paddle, err := loadImageFromBytes(paddlePNG)
+	paddle, err := loadImageFromBytes(paddleSilverPNG)
 	if err != nil {
-		return nil, err
+		// fallback to old paddle.png
+		paddle, err = loadImageFromBytes(paddlePNG)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	brickStandard, err := loadImageFromBytes(brickStandardPNG)
