@@ -1,4 +1,4 @@
-module brick-breaker
+module BRIX
 
 go 1.24.4
 

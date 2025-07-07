@@ -16,13 +16,13 @@ var (
 
 	PaddleY = 960.0 // Y position
 
-	// Gameplay area boundaries
-	GameAreaLeft   = 0.0
-	GameAreaTop    = 80.0 // HUD height at top
+	// Gameplay area boundaries (20 px border on sides & bottom, 60 px HUD on top)
+	GameAreaLeft   = 20.0 // left border
+	GameAreaTop    = 60.0 // HUD height at top
 	GameAreaWidth  = 1400.0
 	GameAreaHeight = 1000.0
-	GameAreaRight  = 1400.0
-	GameAreaBottom = 1080.0
+	GameAreaRight  = GameAreaLeft + GameAreaWidth // 1420
+	GameAreaBottom = GameAreaTop + GameAreaHeight // 1060
 
 	ScreenWidth = 1440
 )

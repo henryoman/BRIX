@@ -1,8 +1,8 @@
 package physics
 
 import (
-	"brick-breaker/config"
-	"brick-breaker/entities"
+	"BRIX/config"
+	"BRIX/entities"
 	"math"
 	"strconv"
 )

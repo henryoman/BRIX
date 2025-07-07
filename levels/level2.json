@@ -1,10 +1,10 @@
 {
   "name": "Level 2",
-  "brick_width": 95,
-  "brick_height": 38,
+  "brick_width": 190,
+  "brick_height": 76,
   "brick_spacing_x": 25,
   "brick_spacing_y": 20,
-  "ball_speed": 230,
+  "ball_speed": 460,
   "bricks": [
     {"x": 2, "y": 3, "bricktype": "columbia", "hits": 1},
     {"x": 3, "y": 3, "bricktype": "columbia", "hits": 1},

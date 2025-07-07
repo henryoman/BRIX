@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image/color"
 	"os"
+	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text"
@@ -12,14 +13,16 @@ import (
 	"golang.org/x/image/font/gofont/goregular"
 	"golang.org/x/image/font/opentype"
 
-	"brick-breaker/assets"
-	"brick-breaker/entities"
+	"BRIX/assets"
+	"BRIX/entities"
 )
 
 // Renderer handles all drawing operations
 type Renderer struct {
 	images *assets.Images
 	font   font.Face
+
+	startTime time.Time // reference time for start-screen flash
 }
 
 // NewRenderer creates a new renderer with loaded images
@@ -66,8 +69,9 @@ func NewRenderer() (*Renderer, error) {
 	}
 
 	return &Renderer{
-		images: images,
-		font:   fontFace,
+		images:    images,
+		font:      fontFace,
+		startTime: time.Now(),
 	}, nil
 }
 
@@ -78,24 +82,33 @@ func (r *Renderer) drawText(screen *ebiten.Image, str string, x, y int, clr colo
 
 // DrawStartScreen draws the start screen
 func (r *Renderer) DrawStartScreen(screen *ebiten.Image, levelName string) {
-	// Clear screen with black background
-	screen.Fill(color.Black)
+	// Decide which start image to show based on elapsed time in the current second
+	elapsed := time.Since(r.startTime)
+	ms := elapsed.Milliseconds() % 1000 // cycle every second
 
-	// Simple, readable title
-	r.drawText(screen, "BRICK BREAKER", 360-80, 170, color.White)
+	var img *ebiten.Image
+	if ms < 700 {
+		img = r.images.StartScreen1
+	} else {
+		img = r.images.StartScreen2
+	}
 
-	// Instructions
-	r.drawText(screen, "Press ARROW KEYS or CLICK to Start", 360-140, 270, color.White)
-
-	// Level info
-	levelText := fmt.Sprintf("Level: %s", levelName)
-	r.drawText(screen, levelText, 360-60, 370, color.White)
+	// Scale to fit the full window (1440x1080 logical size)
+	op := &ebiten.DrawImageOptions{}
+	bounds := img.Bounds()
+	scaleX := 1440.0 / float64(bounds.Dx())
+	scaleY := 1080.0 / float64(bounds.Dy())
+	op.GeoM.Scale(scaleX, scaleY)
+	screen.DrawImage(img, op)
 }
 
 // DrawGame draws the main game screen
 func (r *Renderer) DrawGame(screen *ebiten.Image, paddle *entities.Paddle, ball *entities.Ball, bricks []*entities.Brick, levelName string, levelNum, score int, lives int) {
-	// HUD background (1440x80)
-	hud := ebiten.NewImage(1440, 80)
+	// Clear entire screen so borders remain black
+	screen.Fill(color.Black)
+
+	// HUD background (1440x60)
+	hud := ebiten.NewImage(1440, 60)
 	hud.Fill(color.Black)
 	screen.DrawImage(hud, nil)
 
@@ -104,14 +117,14 @@ func (r *Renderer) DrawGame(screen *ebiten.Image, paddle *entities.Paddle, ball 
 	if len(levelText) > 20 {
 		levelText = levelText[:20] + "..."
 	}
-	r.drawText(screen, levelText, 20, 55, color.White)
+	r.drawText(screen, levelText, 20, 45, color.White)
 
 	scoreText := fmt.Sprintf("Score: %d", score)
-	r.drawText(screen, scoreText, 400, 55, color.White)
+	r.drawText(screen, scoreText, 400, 45, color.White)
 
 	// Lives display
 	livesText := fmt.Sprintf("Lives: %d", lives)
-	r.drawText(screen, livesText, 800, 55, color.White)
+	r.drawText(screen, livesText, 800, 45, color.White)
 
 	// Bricks remaining
 	activeBricks := 0
@@ -121,7 +134,7 @@ func (r *Renderer) DrawGame(screen *ebiten.Image, paddle *entities.Paddle, ball 
 		}
 	}
 	bricksText := fmt.Sprintf("Bricks: %d", activeBricks)
-	r.drawText(screen, bricksText, 1200, 55, color.White)
+	r.drawText(screen, bricksText, 1200, 45, color.White)
 
 	// Playfield background using level-specific image (1400x1000)
 	backgroundImg := r.images.GetLevelBackground(levelNum)
@@ -132,7 +145,7 @@ func (r *Renderer) DrawGame(screen *ebiten.Image, paddle *entities.Paddle, ball 
 	scaleX := 1400.0 / float64(imgBounds.Dx())
 	scaleY := 1000.0 / float64(imgBounds.Dy())
 	op.GeoM.Scale(scaleX, scaleY)
-	op.GeoM.Translate(0, 80) // below HUD
+	op.GeoM.Translate(entities.GameAreaLeft, entities.GameAreaTop) // below HUD and with left border
 	screen.DrawImage(backgroundImg, op)
 
 	// Draw bricks
@@ -169,9 +182,6 @@ func (r *Renderer) DrawWaitingToContinue(screen *ebiten.Image, lives int) {
 	// Lives remaining
 	livesText := fmt.Sprintf("Lives Remaining: %d", lives)
 	r.drawText(screen, livesText, 360-80, 270, color.White)
-
-	// Continue instruction
-	r.drawText(screen, "Press ANY KEY to Continue", 360-100, 370, color.White)
 }
 
 // DrawPauseScreen draws the pause screen

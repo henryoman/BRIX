@@ -5,10 +5,10 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 
-	"brick-breaker/entities"
-	"brick-breaker/levels"
-	"brick-breaker/physics"
-	"brick-breaker/render"
+	"BRIX/entities"
+	"BRIX/levels"
+	"BRIX/physics"
+	"BRIX/render"
 )
 
 // GameState represents the current state of the game
@@ -37,6 +37,10 @@ type Game struct {
 
 	physics  *physics.CollisionSystem
 	renderer *render.Renderer
+
+	// Track the last enforced window size so we don't loop
+	lastWindowW int
+	lastWindowH int
 }
 
 // NewGame creates a new game instance
@@ -54,6 +58,8 @@ func NewGame() *Game {
 		state:        StateStart,
 		physics:      physics.NewCollisionSystem(),
 		renderer:     renderer,
+		lastWindowW:  1440,
+		lastWindowH:  1080,
 	}
 
 	// Initialize game entities
@@ -87,11 +93,23 @@ func (g *Game) loadLevel(levelNum int) error {
 	g.level = level
 	g.bricks = make([]*entities.Brick, len(level.Bricks))
 
-	// Calculate the brick field bounds for proper centering
-	minX, maxX := g.calculateBrickFieldBounds(level)
+	// --- Row-specific centering ---
+	// Determine min/max X for every Y row so each row can be centred independently.
+	rowMin := make(map[int]int)
+	rowMax := make(map[int]int)
+	for _, lb := range level.Bricks {
+		if v, ok := rowMin[lb.Y]; !ok || lb.X < v {
+			rowMin[lb.Y] = lb.X
+		}
+		if v, ok := rowMax[lb.Y]; !ok || lb.X > v {
+			rowMax[lb.Y] = lb.X
+		}
+	}
 
-	// Convert level bricks to game entities with level's sizing and field bounds
+	// Convert level bricks to game entities with row-specific bounds for centring.
 	for i, levelBrick := range level.Bricks {
+		minX := rowMin[levelBrick.Y]
+		maxX := rowMax[levelBrick.Y]
 		g.bricks[i] = entities.NewBrickFromLevelWithBounds(levelBrick,
 			level.BrickWidth, level.BrickHeight, level.BrickSpacingX, level.BrickSpacingY,
 			minX, maxX)
@@ -126,19 +144,19 @@ func (g *Game) calculateBrickFieldBounds(level *levels.Level) (int, int) {
 func (g *Game) createFallbackLevel() {
 	g.level = &levels.Level{
 		Name:          "Default Level",
-		BrickWidth:    75,
-		BrickHeight:   30,
+		BrickWidth:    150,
+		BrickHeight:   60,
 		BrickSpacingX: 40,
 		BrickSpacingY: 30,
-		BallSpeed:     200,
+		BallSpeed:     400,
 	}
 
 	// Create a simple pattern of bricks with fallback sizing
 	g.bricks = []*entities.Brick{
-		entities.NewBrickFromLevelWithBounds(entities.LevelBrick{X: 2, Y: 2, BrickType: "standard", Hits: 1}, 75, 30, 40, 30, 2, 5),
-		entities.NewBrickFromLevelWithBounds(entities.LevelBrick{X: 3, Y: 2, BrickType: "standard", Hits: 1}, 75, 30, 40, 30, 2, 5),
-		entities.NewBrickFromLevelWithBounds(entities.LevelBrick{X: 4, Y: 2, BrickType: "standard", Hits: 1}, 75, 30, 40, 30, 2, 5),
-		entities.NewBrickFromLevelWithBounds(entities.LevelBrick{X: 5, Y: 2, BrickType: "standard", Hits: 1}, 75, 30, 40, 30, 2, 5),
+		entities.NewBrickFromLevelWithBounds(entities.LevelBrick{X: 2, Y: 2, BrickType: "standard", Hits: 1}, 150, 60, 40, 30, 2, 5),
+		entities.NewBrickFromLevelWithBounds(entities.LevelBrick{X: 3, Y: 2, BrickType: "standard", Hits: 1}, 150, 60, 40, 30, 2, 5),
+		entities.NewBrickFromLevelWithBounds(entities.LevelBrick{X: 4, Y: 2, BrickType: "standard", Hits: 1}, 150, 60, 40, 30, 2, 5),
+		entities.NewBrickFromLevelWithBounds(entities.LevelBrick{X: 5, Y: 2, BrickType: "standard", Hits: 1}, 150, 60, 40, 30, 2, 5),
 	}
 }
 
@@ -291,5 +309,36 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 // Layout implements ebiten.Game interface
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
+	// Enforce a 4:3 aspect-ratio on the OS window. We clamp the window size to the
+	// closest multiple of the base resolution (1440×1080) that fits in the space
+	// the user just requested. This lets the user resize freely from a corner while
+	// preventing side-only or top/bottom-only stretching.
+
+	// Ignore the first call where outsideWidth/outsideHeight can be zero.
+	if outsideWidth > 0 && outsideHeight > 0 {
+		baseW, baseH := 1440, 1080
+
+		scaleW := float64(outsideWidth) / float64(baseW)
+		scaleH := float64(outsideHeight) / float64(baseH)
+
+		// Pick the smaller scale to ensure the game always fits.
+		scale := scaleW
+		if scaleH < scale {
+			scale = scaleH
+		}
+
+		// Round to nearest integer pixel size.
+		desiredW := int(scale * float64(baseW))
+		desiredH := int(scale * float64(baseH))
+
+		// Only update if the desired size differs from the current size.
+		if (desiredW != outsideWidth || desiredH != outsideHeight) &&
+			(desiredW != g.lastWindowW || desiredH != g.lastWindowH) {
+			ebiten.SetWindowSize(desiredW, desiredH)
+			g.lastWindowW = desiredW
+			g.lastWindowH = desiredH
+		}
+	}
+
 	return 1440, 1080
 }

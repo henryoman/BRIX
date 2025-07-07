@@ -6,7 +6,7 @@ import (
 	"image"
 	_ "image/png"
 
-	"brick-breaker/entities"
+	"BRIX/entities"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -42,6 +42,14 @@ var brickSupremePNG []byte
 //go:embed levels/level.png
 var levelBackgroundPNG []byte
 
+// Embed start screen images
+//
+//go:embed startscreens/start-screen-1.png
+var startScreen1PNG []byte
+
+//go:embed startscreens/start-screen-2.png
+var startScreen2PNG []byte
+
 type Images struct {
 	Paddle          *ebiten.Image
 	BrickStandard   *ebiten.Image
@@ -50,6 +58,8 @@ type Images struct {
 	BrickTusi       *ebiten.Image
 	BrickWeed       *ebiten.Image
 	LevelBackground *ebiten.Image
+	StartScreen1    *ebiten.Image
+	StartScreen2    *ebiten.Image
 }
 
 func LoadImages() (*Images, error) {
@@ -92,6 +102,16 @@ func LoadImages() (*Images, error) {
 		return nil, err
 	}
 
+	// Load start screens
+	start1, err := loadImageFromBytes(startScreen1PNG)
+	if err != nil {
+		return nil, err
+	}
+	start2, err := loadImageFromBytes(startScreen2PNG)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Images{
 		Paddle:          paddle,
 		BrickStandard:   brickStandard,
@@ -100,6 +120,8 @@ func LoadImages() (*Images, error) {
 		BrickTusi:       brickTusi,
 		BrickWeed:       brickWeed,
 		LevelBackground: levelBackground,
+		StartScreen1:    start1,
+		StartScreen2:    start2,
 	}, nil
 }
 

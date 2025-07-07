@@ -1,10 +1,10 @@
 {
   "name": "Level 7",
-  "brick_width": 70,
-  "brick_height": 28,
+  "brick_width": 140,
+  "brick_height": 56,
   "brick_spacing_x": 20,
   "brick_spacing_y": 20,
-  "ball_speed": 320,
+  "ball_speed": 640,
   "bricks": [
     {"x": 4, "y": 2, "bricktype": "columbia", "hits": 1},
     {"x": 5, "y": 2, "bricktype": "supreme", "hits": 1}

@@ -153,8 +153,20 @@ func (b *Brick) Hit() bool {
 
 // GetScreenPosition returns the pixel position of the brick on screen with smart centering
 func (b *Brick) GetScreenPosition() (float64, float64) {
-	// Simple grid placement from (0, GameAreaTop)
-	screenX := float64(b.x * (b.width + b.spacingX))
+	// Calculate horizontal centering offset based on field bounds.
+	cols := b.fieldMaxX - b.fieldMinX + 1
+	if cols <= 0 {
+		cols = 1
+	}
+
+	fieldWidthPx := cols*b.width + (cols-1)*b.spacingX
+	// Ensure we work with float64 for sub-pixel precision when scaling.
+	offsetX := (GameAreaWidth - float64(fieldWidthPx)) / 2.0
+
+	// Position within the grid relative to the leftmost brick (fieldMinX).
+	dx := b.x - b.fieldMinX
+
+	screenX := GameAreaLeft + offsetX + float64(dx*(b.width+b.spacingX))
 	screenY := GameAreaTop + float64(b.y*(b.height+b.spacingY))
 
 	return screenX, screenY

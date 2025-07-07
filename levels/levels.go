@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"brick-breaker/entities"
+	"BRIX/entities"
 )
 
 // Level represents a complete level configuration
@@ -49,10 +49,11 @@ func LoadLevel(levelNum int) (*Level, error) {
 func CreateDefaultLevel() *Level {
 	return &Level{
 		Name:          "Default Level",
-		BrickWidth:    75,
-		BrickHeight:   30,
+		BrickWidth:    150,
+		BrickHeight:   60,
 		BrickSpacingX: 25,
 		BrickSpacingY: 30,
+		BallSpeed:     400,
 		Bricks: []entities.LevelBrick{
 			{X: 4, Y: 2, BrickType: "standard", Hits: 1},
 			{X: 5, Y: 2, BrickType: "standard", Hits: 1},

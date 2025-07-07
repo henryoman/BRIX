@@ -1,10 +1,10 @@
 {
   "name": "Level 8",
-  "brick_width": 65,
-  "brick_height": 26,
+  "brick_width": 130,
+  "brick_height": 52,
   "brick_spacing_x": 20,
   "brick_spacing_y": 20,
-  "ball_speed": 340,
+  "ball_speed": 680,
   "bricks": [
     {"x": 3, "y": 3, "bricktype": "supreme", "hits": 1}
   ]

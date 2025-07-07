@@ -14,7 +14,7 @@ type Ball struct {
 
 // NewBall creates a new ball positioned above the paddle with default speed
 func NewBall() *Ball {
-	return NewBallWithSpeed(480) // default speed
+	return NewBallWithSpeed(960) // doubled default speed
 }
 
 // NewBallWithSpeed creates a new ball with configurable speed positioned at gameplay area center

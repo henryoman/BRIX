@@ -1,10 +1,10 @@
 {
   "name": "Level 3",
-  "brick_width": 90,
-  "brick_height": 36,
+  "brick_width": 180,
+  "brick_height": 72,
   "brick_spacing_x": 20,
   "brick_spacing_y": 20,
-  "ball_speed": 300,
+  "ball_speed": 600,
   "bricks": [
     {"x": 2, "y": 2, "bricktype": "standard", "hits": 1},
     {"x": 3, "y": 2, "bricktype": "standard", "hits": 1},
