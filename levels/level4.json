@@ -1,0 +1,13 @@
+{
+  "name": "Level 4",
+  "brick_width": 85,
+  "brick_height": 34,
+  "brick_spacing_x": 20,
+  "brick_spacing_y": 20,
+  "ball_speed": 260,
+  "bricks": [
+    {"x": 4, "y": 3, "bricktype": "supreme", "hits": 1},
+    {"x": 5, "y": 3, "bricktype": "columbia", "hits": 1},
+    {"x": 6, "y": 3, "bricktype": "supreme", "hits": 1}
+  ]
+} 

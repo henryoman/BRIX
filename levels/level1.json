@@ -1,7 +1,7 @@
 {
   "name": "Level 1",
-  "brick_width": 90,
-  "brick_height": 36,
+  "brick_width": 100,
+  "brick_height": 40,
   "brick_spacing_x": 25,
   "brick_spacing_y": 30,
   "ball_speed": 180,
