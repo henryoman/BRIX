@@ -16,8 +16,8 @@ const (
 	BrickTypeStandard BrickType = "standard" // brick-standard.png
 	BrickTypeTusi     BrickType = "tusi"     // brick-tusi.png
 	BrickTypeWeed     BrickType = "weed"     // brick-weed.png
-	BrickTypeColumbia BrickType = "columbia" // brick-columbia.png - white
-	BrickTypeSupreme  BrickType = "supreme"  // brick-supreme.png - pink/purple
+	BrickTypeColumbia BrickType = "columbia" // brick-columbia.png
+	BrickTypeSupreme  BrickType = "supreme"  // brick-supreme.png
 )
 
 // Brick represents a single brick in the level
