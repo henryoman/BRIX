@@ -94,24 +94,24 @@ func (r *Renderer) DrawStartScreen(screen *ebiten.Image, levelName string) {
 
 // DrawGame draws the main game screen
 func (r *Renderer) DrawGame(screen *ebiten.Image, paddle *entities.Paddle, ball *entities.Ball, bricks []*entities.Brick, levelName string, levelNum, score int, lives int) {
-	// HUD background (720x30)
-	hud := ebiten.NewImage(720, 30)
+	// HUD background (1440x80)
+	hud := ebiten.NewImage(1440, 80)
 	hud.Fill(color.Black)
 	screen.DrawImage(hud, nil)
 
-	// HUD text - single line with all info
+	// HUD text - single line with all info at y=55
 	levelText := levelName
 	if len(levelText) > 20 {
 		levelText = levelText[:20] + "..."
 	}
-	r.drawText(screen, levelText, 10, 22, color.White)
+	r.drawText(screen, levelText, 20, 55, color.White)
 
 	scoreText := fmt.Sprintf("Score: %d", score)
-	r.drawText(screen, scoreText, 200, 22, color.White)
+	r.drawText(screen, scoreText, 400, 55, color.White)
 
 	// Lives display
 	livesText := fmt.Sprintf("Lives: %d", lives)
-	r.drawText(screen, livesText, 400, 22, color.White)
+	r.drawText(screen, livesText, 800, 55, color.White)
 
 	// Bricks remaining
 	activeBricks := 0
@@ -121,18 +121,18 @@ func (r *Renderer) DrawGame(screen *ebiten.Image, paddle *entities.Paddle, ball 
 		}
 	}
 	bricksText := fmt.Sprintf("Bricks: %d", activeBricks)
-	r.drawText(screen, bricksText, 550, 22, color.White)
+	r.drawText(screen, bricksText, 1200, 55, color.White)
 
-	// Playfield background using level-specific image (700x500 with 10px margins)
+	// Playfield background using level-specific image (1400x1000)
 	backgroundImg := r.images.GetLevelBackground(levelNum)
 	op := &ebiten.DrawImageOptions{}
 
-	// Scale the background image to fit the 700x500 gameplay area
+	// Scale the background image to fit the 1400x1000 gameplay area
 	imgBounds := backgroundImg.Bounds()
-	scaleX := 700.0 / float64(imgBounds.Dx())
-	scaleY := 500.0 / float64(imgBounds.Dy())
+	scaleX := 1400.0 / float64(imgBounds.Dx())
+	scaleY := 1000.0 / float64(imgBounds.Dy())
 	op.GeoM.Scale(scaleX, scaleY)
-	op.GeoM.Translate(10, 30) // 10px left margin, 30px top (after HUD)
+	op.GeoM.Translate(0, 80) // below HUD
 	screen.DrawImage(backgroundImg, op)
 
 	// Draw bricks

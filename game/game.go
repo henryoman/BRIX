@@ -291,5 +291,5 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 // Layout implements ebiten.Game interface
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return 720, 540
+	return 1440, 1080
 }

@@ -1,8 +1,8 @@
 package entities
 
 const (
-	BallRadius = 8
-	HUDHeight  = 30
+	BallRadius = 16
+	HUDHeight  = 80
 )
 
 // Ball represents the game ball
@@ -14,7 +14,7 @@ type Ball struct {
 
 // NewBall creates a new ball positioned above the paddle with default speed
 func NewBall() *Ball {
-	return NewBallWithSpeed(240) // default speed
+	return NewBallWithSpeed(480) // default speed
 }
 
 // NewBallWithSpeed creates a new ball with configurable speed positioned at gameplay area center
@@ -88,7 +88,7 @@ func (b *Ball) Radius() float64 {
 
 // IsLost returns true if the ball has fallen off the bottom of the gameplay area
 func (b *Ball) IsLost() bool {
-	return b.y > GameAreaBottom+50 // a bit below gameplay area bottom
+	return b.y > GameAreaBottom+100 // below gameplay area
 }
 
 // GetBounds returns the ball's bounding box for collision detection

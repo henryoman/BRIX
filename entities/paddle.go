@@ -4,26 +4,27 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-const (
-	PaddleWidth  = 120
-	PaddleHeight = 20
+const Tick = 1.0 / 60.0 // fixed timestep (should match ebiten TPS)
+
+var (
+	PaddleWidth  = 240.0
+	PaddleHeight = 40.0
 	// Inertia parameters – tweak for desired feel
-	PaddleAccel    = 2500.0 // px/s² when key held (reduced for heavier feel)
-	PaddleFriction = 2400.0 // px/s² when no key
-	PaddleMaxSpeed = 450.0  // px/s terminal velocity (further reduced)
+	PaddleAccel    = 5000.0 // px/s² when key held (reduced for heavier feel)
+	PaddleFriction = 4800.0 // px/s² when no key
+	PaddleMaxSpeed = 900.0  // px/s terminal velocity (further reduced)
 
-	PaddleY = 500 // Y position (moved DOWN towards bottom)
+	PaddleY = 960.0 // Y position
 
-	// Gameplay area boundaries (not full screen)
-	GameAreaLeft   = 10  // 10px left margin
-	GameAreaRight  = 710 // 10px + 700px width
-	GameAreaTop    = 30  // 30px top (HUD)
-	GameAreaBottom = 530 // 30px + 500px height
-	GameAreaWidth  = 700 // gameplay area width
-	GameAreaHeight = 500 // gameplay area height
+	// Gameplay area boundaries
+	GameAreaLeft   = 0.0
+	GameAreaTop    = 80.0 // HUD height at top
+	GameAreaWidth  = 1400.0
+	GameAreaHeight = 1000.0
+	GameAreaRight  = 1400.0
+	GameAreaBottom = 1080.0
 
-	ScreenWidth = 720        // full screen width
-	Tick        = 1.0 / 60.0 // fixed timestep (should match ebiten TPS)
+	ScreenWidth = 1440
 )
 
 // Paddle represents the player's paddle

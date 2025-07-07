@@ -110,21 +110,21 @@ func ValidateLevel(level *Level) error {
 	// --- Pixel-exact bounds validation ---
 	fieldColumns := maxX - minX + 1
 	fieldWidthPx := fieldColumns*level.BrickWidth + (fieldColumns-1)*level.BrickSpacingX
-	if fieldWidthPx > entities.GameAreaWidth {
+	if float64(fieldWidthPx) > entities.GameAreaWidth {
 		return fmt.Errorf("brick field width (%d px) exceeds gameplay width (%d px)", fieldWidthPx, entities.GameAreaWidth)
 	}
 
 	// Horizontal centering offset (same calculation used by entities.Brick).
-	fieldStartX := entities.GameAreaLeft + (entities.GameAreaWidth-fieldWidthPx)/2
-	fieldEndX := fieldStartX + fieldWidthPx
+	fieldStartX := entities.GameAreaLeft + (entities.GameAreaWidth-float64(fieldWidthPx))/2
+	fieldEndX := fieldStartX + float64(fieldWidthPx)
 	if fieldStartX < entities.GameAreaLeft || fieldEndX > entities.GameAreaRight {
 		return fmt.Errorf("brick field would render outside horizontal gameplay bounds (start=%d, end=%d)", fieldStartX, fieldEndX)
 	}
 
 	// Vertical bounds: emulate entities.Brick.GetScreenPosition logic.
 	verticalStride := level.BrickHeight + level.BrickSpacingY
-	topMostY := entities.GameAreaTop - 50 + minY*verticalStride
-	bottomMostY := entities.GameAreaTop - 50 + maxY*verticalStride + level.BrickHeight
+	topMostY := entities.GameAreaTop + float64(minY*verticalStride)
+	bottomMostY := entities.GameAreaTop + float64(maxY*verticalStride+level.BrickHeight)
 	if topMostY < entities.GameAreaTop {
 		return fmt.Errorf("top bricks would render above gameplay area (y=%d)", topMostY)
 	}
@@ -162,22 +162,22 @@ func AutoFitLevel(level *Level) {
 
 	// Compute current required width
 	currentWidth := cols*level.BrickWidth + (cols-1)*level.BrickSpacingX
-	if currentWidth <= entities.GameAreaWidth {
+	if float64(currentWidth) <= entities.GameAreaWidth {
 		return // already fits
 	}
 
 	// Compute new brick width that will fit exactly
-	available := entities.GameAreaWidth - (cols-1)*level.BrickSpacingX
+	available := entities.GameAreaWidth - float64((cols-1)*level.BrickSpacingX)
 	if available <= 0 {
 		return // cannot fit, leave as is; validation will catch
 	}
-	newWidth := available / cols
+	newWidth := available / float64(cols)
 	if newWidth <= 0 {
 		return
 	}
 
 	// Scale height proportionally
 	ratio := float64(level.BrickHeight) / float64(level.BrickWidth)
-	level.BrickWidth = newWidth
-	level.BrickHeight = int(float64(newWidth) * ratio)
+	level.BrickWidth = int(newWidth)
+	level.BrickHeight = int(newWidth * ratio)
 }

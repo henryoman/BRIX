@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	ebiten.SetWindowSize(720, 540)
+	ebiten.SetWindowSize(1440, 1080)
 	ebiten.SetWindowTitle("Brick Breaker")
 
 	// Load brick & scoring configs

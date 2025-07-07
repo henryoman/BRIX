@@ -1,4 +1,19 @@
-# Brick Breaker Game
+<div align="center">
+  <img src="logo.png" alt="Logo" width="200"/>
+</div>
+
+<h3 align="center">BRIX</h3>
+
+<div align="center">
+
+[![Go Report Card](https://goreportcard.com/badge/github.com/your-username/your-repo)](https://goreportcard.com/report/github.com/henryoman/brick-breaker)
+[![Go Reference](https://pkg.go.dev/badge/github.com/your-username/your-repo.svg)](https://pkg.go.dev/github.com/your-username/your-repo)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Ebitengine](https://img.shields.io/badge/Made%20with-Ebitengine-blue.svg)](https://ebitengine.org/)
+
+</div>
+
+---
 
 A modern brick breaker game built with Go and Ebitengine, featuring a flexible JSON-based level system.
 
