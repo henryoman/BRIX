@@ -111,14 +111,14 @@ func ValidateLevel(level *Level) error {
 	fieldColumns := maxX - minX + 1
 	fieldWidthPx := fieldColumns*level.BrickWidth + (fieldColumns-1)*level.BrickSpacingX
 	if float64(fieldWidthPx) > entities.GameAreaWidth {
-		return fmt.Errorf("brick field width (%d px) exceeds gameplay width (%d px)", fieldWidthPx, entities.GameAreaWidth)
+		return fmt.Errorf("brick field width (%d px) exceeds gameplay width (%.0f px)", fieldWidthPx, entities.GameAreaWidth)
 	}
 
 	// Horizontal centering offset (same calculation used by entities.Brick).
 	fieldStartX := entities.GameAreaLeft + (entities.GameAreaWidth-float64(fieldWidthPx))/2
 	fieldEndX := fieldStartX + float64(fieldWidthPx)
 	if fieldStartX < entities.GameAreaLeft || fieldEndX > entities.GameAreaRight {
-		return fmt.Errorf("brick field would render outside horizontal gameplay bounds (start=%d, end=%d)", fieldStartX, fieldEndX)
+		return fmt.Errorf("brick field would render outside horizontal gameplay bounds (start=%.0f, end=%.0f)", fieldStartX, fieldEndX)
 	}
 
 	// Vertical bounds: emulate entities.Brick.GetScreenPosition logic.
@@ -126,10 +126,10 @@ func ValidateLevel(level *Level) error {
 	topMostY := entities.GameAreaTop + float64(minY*verticalStride)
 	bottomMostY := entities.GameAreaTop + float64(maxY*verticalStride+level.BrickHeight)
 	if topMostY < entities.GameAreaTop {
-		return fmt.Errorf("top bricks would render above gameplay area (y=%d)", topMostY)
+		return fmt.Errorf("top bricks would render above gameplay area (y=%.0f)", topMostY)
 	}
 	if bottomMostY > entities.GameAreaBottom {
-		return fmt.Errorf("bottom bricks would render below gameplay area (y=%d)", bottomMostY)
+		return fmt.Errorf("bottom bricks would render below gameplay area (y=%.0f)", bottomMostY)
 	}
 
 	return nil
