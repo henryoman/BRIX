@@ -77,24 +77,6 @@ func isPixelFormat(level *Level) bool {
 	return level.BrickWidth == 0 && level.BrickHeight == 0
 }
 
-// CreateDefaultLevel creates a simple default level for fallback
-func CreateDefaultLevel() *Level {
-	return &Level{
-		Name:          "Default Level",
-		BrickWidth:    150,
-		BrickHeight:   60,
-		BrickSpacingX: 25,
-		BrickSpacingY: 30,
-		BallSpeed:     400,
-		Bricks: []entities.LevelBrick{
-			{X: 4, Y: 2, BrickType: "standard", Hits: 1},
-			{X: 5, Y: 2, BrickType: "standard", Hits: 1},
-			{X: 6, Y: 2, BrickType: "standard", Hits: 1},
-			{X: 7, Y: 2, BrickType: "standard", Hits: 1},
-		},
-	}
-}
-
 // ValidateLevel checks if a level has valid brick configurations
 func ValidateLevel(level *Level) error {
 	if level.Name == "" {

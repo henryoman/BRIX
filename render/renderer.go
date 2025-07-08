@@ -19,8 +19,9 @@ import (
 
 // Renderer handles all drawing operations
 type Renderer struct {
-	images *assets.Images
-	font   font.Face
+	images  *assets.Images
+	font    font.Face
+	bigFont font.Face
 
 	startTime time.Time // reference time for start-screen flash
 }
@@ -68,9 +69,19 @@ func NewRenderer() (*Renderer, error) {
 		return nil, fmt.Errorf("failed to create font face: %v", err)
 	}
 
+	bigFontFace, err := opentype.NewFace(tt, &opentype.FaceOptions{
+		Size:    80, // Large font for score
+		DPI:     dpi,
+		Hinting: font.HintingFull,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create big font face: %v", err)
+	}
+
 	return &Renderer{
 		images:    images,
 		font:      fontFace,
+		bigFont:   bigFontFace,
 		startTime: time.Now(),
 	}, nil
 }
@@ -183,13 +194,12 @@ func (r *Renderer) DrawGameOver(screen *ebiten.Image, score int) {
 	boxCenterX := 215 + 300/2 // 365
 	boxCenterY := 680 + 120/2 // 740
 
-	// Estimate text width for centering (rough approximation)
-	// Each character is roughly 12 pixels wide with our font
-	textWidth := len(scoreText) * 12
+	// Estimate text width for centering (big font is much wider)
+	textWidth := len(scoreText) * 48 // Roughly 48px per character for 80pt font
 	textX := boxCenterX - textWidth/2
 
-	// Position text at box center (Y is baseline, so add a bit for vertical centering)
-	r.drawText(screen, scoreText, textX, boxCenterY+10, color.White)
+	// Position text at box center using big font, lowered by 30 pixels
+	text.Draw(screen, scoreText, r.bigFont, textX, boxCenterY+40, color.White)
 }
 
 // DrawWaitingToContinue draws the waiting to continue screen
@@ -245,9 +255,8 @@ func (r *Renderer) DrawLevelComplete(screen *ebiten.Image) {
 	screen.DrawImage(img, op)
 }
 
-// drawBricks draws all active bricks using sprite images with rounded corners
+// drawBricks draws all active bricks using sprite images
 func (r *Renderer) drawBricks(screen *ebiten.Image, bricks []*entities.Brick) {
-	const cornerRadius = 2.0 // 2-pixel corner radius for subtle rounding
 
 	for _, brick := range bricks {
 		if !brick.IsActive() {
@@ -259,35 +268,21 @@ func (r *Renderer) drawBricks(screen *ebiten.Image, bricks []*entities.Brick) {
 		brickWidth := float32(brick.Width())
 		brickHeight := float32(brick.Height())
 
-		// Create a temporary image for the rounded brick
-		tempImg := ebiten.NewImage(brick.Width(), brick.Height())
-
-		// Draw the brick sprite scaled to fit the temporary image
+		// Draw brick sprite scaled to the brick's configured size
 		op := &ebiten.DrawImageOptions{}
+
+		// Scale the sprite to fit exactly into the brick's size
 		imgBounds := brickImg.Bounds()
 		scaleX := float64(brick.Width()) / float64(imgBounds.Dx())
 		scaleY := float64(brick.Height()) / float64(imgBounds.Dy())
 		op.GeoM.Scale(scaleX, scaleY)
-		tempImg.DrawImage(brickImg, op)
+		op.GeoM.Translate(brickX, brickY)
 
-		// Create a mask with rounded corners (transparent background, white shape)
-		mask := ebiten.NewImage(brick.Width(), brick.Height())
-		r.drawRoundedRect(mask, 0, 0, brickWidth, brickHeight, cornerRadius, color.White)
+		screen.DrawImage(brickImg, op)
 
-		// Apply the mask to clip the brick image to rounded corners
-		// Use DestinationIn blend mode to keep brick pixels only where mask is opaque
-		maskOp := &ebiten.DrawImageOptions{}
-		maskOp.Blend = ebiten.BlendDestinationIn
-		tempImg.DrawImage(mask, maskOp)
-
-		// Draw the masked brick to the screen
-		finalOp := &ebiten.DrawImageOptions{}
-		finalOp.GeoM.Translate(brickX, brickY)
-		screen.DrawImage(tempImg, finalOp)
-
-		// Draw rounded white outline for better visibility (25% opacity)
-		r.drawRoundedRectOutline(screen, float32(brickX), float32(brickY),
-			brickWidth, brickHeight, cornerRadius, color.RGBA{255, 255, 255, 64})
+		// Draw white outline for better visibility (25% opacity)
+		vector.StrokeRect(screen, float32(brickX), float32(brickY),
+			brickWidth, brickHeight, 1.0, color.RGBA{255, 255, 255, 64}, false)
 
 		// Show hit count if more than 1
 		if brick.Hits() > 1 {
@@ -315,34 +310,4 @@ func (r *Renderer) drawPaddle(screen *ebiten.Image, paddle *entities.Paddle) {
 func (r *Renderer) drawBall(screen *ebiten.Image, ball *entities.Ball) {
 	vector.DrawFilledCircle(screen, float32(ball.X()), float32(ball.Y()),
 		float32(ball.Radius()), color.White, false)
-}
-
-// drawRoundedRect draws a filled rounded rectangle with specified corner radius
-func (r *Renderer) drawRoundedRect(dst *ebiten.Image, x, y, width, height, radius float32, clr color.Color) {
-	// Draw the main rectangle (without corners)
-	vector.DrawFilledRect(dst, x+radius, y, width-radius*2, height, clr, false)
-	vector.DrawFilledRect(dst, x, y+radius, width, height-radius*2, clr, false)
-
-	// Draw the four rounded corners as circles
-	vector.DrawFilledCircle(dst, x+radius, y+radius, radius, clr, false)              // Top-left
-	vector.DrawFilledCircle(dst, x+width-radius, y+radius, radius, clr, false)        // Top-right
-	vector.DrawFilledCircle(dst, x+radius, y+height-radius, radius, clr, false)       // Bottom-left
-	vector.DrawFilledCircle(dst, x+width-radius, y+height-radius, radius, clr, false) // Bottom-right
-}
-
-// drawRoundedRectOutline draws the outline of a rounded rectangle
-func (r *Renderer) drawRoundedRectOutline(dst *ebiten.Image, x, y, width, height, radius float32, clr color.Color) {
-	strokeWidth := float32(1.0)
-
-	// Draw the four sides
-	vector.StrokeLine(dst, x+radius, y, x+width-radius, y, strokeWidth, clr, false)               // Top
-	vector.StrokeLine(dst, x+radius, y+height, x+width-radius, y+height, strokeWidth, clr, false) // Bottom
-	vector.StrokeLine(dst, x, y+radius, x, y+height-radius, strokeWidth, clr, false)              // Left
-	vector.StrokeLine(dst, x+width, y+radius, x+width, y+height-radius, strokeWidth, clr, false)  // Right
-
-	// Draw the four rounded corners as circle outlines
-	vector.StrokeCircle(dst, x+radius, y+radius, radius, strokeWidth, clr, false)              // Top-left
-	vector.StrokeCircle(dst, x+width-radius, y+radius, radius, strokeWidth, clr, false)        // Top-right
-	vector.StrokeCircle(dst, x+radius, y+height-radius, radius, strokeWidth, clr, false)       // Bottom-left
-	vector.StrokeCircle(dst, x+width-radius, y+height-radius, radius, strokeWidth, clr, false) // Bottom-right
 }

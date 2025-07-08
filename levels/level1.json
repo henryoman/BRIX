@@ -1,25 +1,14 @@
 {
-  "name": "Level 1 - Pixel Perfect",
+  "name": "Level 1",
+  "brick_width": 240,
+  "brick_height": 96,
+  "brick_spacing_x": 25,
+  "brick_spacing_y": 20,
   "ball_speed": 400,
   "bricks": [
-    {"x": 200, "y": 150, "type": "standard", "hits": 1},
-    {"x": 350, "y": 150, "type": "standard", "hits": 1},
-    {"x": 500, "y": 150, "type": "standard", "hits": 1},
-    {"x": 650, "y": 150, "type": "standard", "hits": 1},
-    {"x": 800, "y": 150, "type": "standard", "hits": 1},
-    
-    {"x": 275, "y": 220, "type": "tusi", "hits": 1},
-    {"x": 425, "y": 220, "type": "tusi", "hits": 1},
-    {"x": 575, "y": 220, "type": "tusi", "hits": 1},
-    {"x": 725, "y": 220, "type": "tusi", "hits": 1},
-    
-    {"x": 350, "y": 290, "type": "weed", "hits": 2},
-    {"x": 500, "y": 290, "type": "weed", "hits": 2},
-    {"x": 650, "y": 290, "type": "weed", "hits": 2},
-    
-    {"x": 425, "y": 360, "type": "columbia", "hits": 2},
-    {"x": 575, "y": 360, "type": "columbia", "hits": 2},
-    
-    {"x": 500, "y": 430, "type": "supreme", "hits": 3}
+    {"x": 4, "y": 2, "brick_type": "standard", "hits": 1},
+    {"x": 5, "y": 2, "brick_type": "standard", "hits": 1},
+    {"x": 6, "y": 2, "brick_type": "standard", "hits": 1},
+    {"x": 7, "y": 2, "brick_type": "standard", "hits": 1}
   ]
 } 
