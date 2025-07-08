@@ -270,14 +270,15 @@ func (r *Renderer) drawBricks(screen *ebiten.Image, bricks []*entities.Brick) {
 		op.GeoM.Scale(scaleX, scaleY)
 		tempImg.DrawImage(brickImg, op)
 
-		// Create a mask with rounded corners using basic shapes
+		// Create a mask with rounded corners (transparent background, white shape)
 		mask := ebiten.NewImage(brick.Width(), brick.Height())
 		r.drawRoundedRect(mask, 0, 0, brickWidth, brickHeight, cornerRadius, color.White)
 
-		// Apply the mask to create rounded corners
-		maskedBrickOp := &ebiten.DrawImageOptions{}
-		maskedBrickOp.Blend = ebiten.BlendSourceIn
-		tempImg.DrawImage(mask, maskedBrickOp)
+		// Apply the mask to clip the brick image to rounded corners
+		// Use DestinationIn blend mode to keep brick pixels only where mask is opaque
+		maskOp := &ebiten.DrawImageOptions{}
+		maskOp.Blend = ebiten.BlendDestinationIn
+		tempImg.DrawImage(mask, maskOp)
 
 		// Draw the masked brick to the screen
 		finalOp := &ebiten.DrawImageOptions{}
