@@ -58,6 +58,12 @@ var pauseScreenPNG []byte
 //go:embed startscreens/level-complete-screen.png
 var levelCompleteScreenPNG []byte
 
+//go:embed startscreens/game-over-screen.png
+var gameOverScreenPNG []byte
+
+//go:embed startscreens/ball-lost-screen.png
+var ballLostScreenPNG []byte
+
 type Images struct {
 	Paddle          *ebiten.Image
 	BrickStandard   *ebiten.Image
@@ -71,6 +77,8 @@ type Images struct {
 
 	PauseScreen         *ebiten.Image
 	LevelCompleteScreen *ebiten.Image
+	GameOverScreen      *ebiten.Image
+	BallLostScreen      *ebiten.Image
 }
 
 func LoadImages() (*Images, error) {
@@ -134,6 +142,16 @@ func LoadImages() (*Images, error) {
 		return nil, err
 	}
 
+	gameOverScreen, err := loadImageFromBytes(gameOverScreenPNG)
+	if err != nil {
+		return nil, err
+	}
+
+	ballLostScreen, err := loadImageFromBytes(ballLostScreenPNG)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Images{
 		Paddle:          paddle,
 		BrickStandard:   brickStandard,
@@ -147,6 +165,8 @@ func LoadImages() (*Images, error) {
 
 		PauseScreen:         pauseScreen,
 		LevelCompleteScreen: levelCompleteScreen,
+		GameOverScreen:      gameOverScreen,
+		BallLostScreen:      ballLostScreen,
 	}, nil
 }
 

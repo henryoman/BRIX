@@ -1,7 +1,7 @@
 package entities
 
 const (
-	BallRadius = 16
+	BallRadius = 12
 	HUDHeight  = 80
 )
 

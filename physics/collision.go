@@ -44,7 +44,7 @@ func (cs *CollisionSystem) CheckPaddleCollision(ball *entities.Ball, paddle *ent
 
 		// Limit the horizontal component to prevent shallow bounces
 		// Max horizontal is 75% of speed, ensuring minimum 25% vertical
-		maxHorizontal := speed * 0.75
+		maxHorizontal := speed * 0.70
 		newVX := offset * maxHorizontal
 
 		// Ensure strong upward movement after bounce - minimum 50% of speed
