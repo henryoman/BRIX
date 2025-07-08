@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 
 	"BRIX/entities"
 	"BRIX/levels"
@@ -93,29 +94,37 @@ func (g *Game) loadLevel(levelNum int) error {
 	g.level = level
 	g.bricks = make([]*entities.Brick, len(level.Bricks))
 
-	// --- Row-specific centering ---
-	// Determine min/max X for every Y row so each row can be centred independently.
-	rowMin := make(map[int]int)
-	rowMax := make(map[int]int)
-	for _, lb := range level.Bricks {
-		if v, ok := rowMin[lb.Y]; !ok || lb.X < v {
-			rowMin[lb.Y] = lb.X
+	if level.UsePixelPositioning {
+		// New pixel-perfect format
+		for i, levelBrick := range level.Bricks {
+			g.bricks[i] = entities.NewBrickFromLevelPixel(levelBrick, level.DefaultBrickWidth, level.DefaultBrickHeight)
 		}
-		if v, ok := rowMax[lb.Y]; !ok || lb.X > v {
-			rowMax[lb.Y] = lb.X
+	} else {
+		// Legacy grid-based format with row-specific centering
+		// Determine min/max X for every Y row so each row can be centred independently.
+		rowMin := make(map[int]int)
+		rowMax := make(map[int]int)
+		for _, lb := range level.Bricks {
+			if v, ok := rowMin[lb.Y]; !ok || lb.X < v {
+				rowMin[lb.Y] = lb.X
+			}
+			if v, ok := rowMax[lb.Y]; !ok || lb.X > v {
+				rowMax[lb.Y] = lb.X
+			}
+		}
+
+		// Convert level bricks to game entities with row-specific bounds for centring.
+		for i, levelBrick := range level.Bricks {
+			minX := rowMin[levelBrick.Y]
+			maxX := rowMax[levelBrick.Y]
+			g.bricks[i] = entities.NewBrickFromLevelWithBounds(levelBrick,
+				level.BrickWidth, level.BrickHeight, level.BrickSpacingX, level.BrickSpacingY,
+				minX, maxX)
 		}
 	}
 
-	// Convert level bricks to game entities with row-specific bounds for centring.
-	for i, levelBrick := range level.Bricks {
-		minX := rowMin[levelBrick.Y]
-		maxX := rowMax[levelBrick.Y]
-		g.bricks[i] = entities.NewBrickFromLevelWithBounds(levelBrick,
-			level.BrickWidth, level.BrickHeight, level.BrickSpacingX, level.BrickSpacingY,
-			minX, maxX)
-	}
-
-	log.Printf("Level loaded: %s with %d bricks", level.Name, len(g.bricks))
+	log.Printf("Level loaded: %s with %d bricks (format: %s)", level.Name, len(g.bricks),
+		map[bool]string{true: "pixel-perfect", false: "grid-based"}[level.UsePixelPositioning])
 	return nil
 }
 
@@ -181,9 +190,9 @@ func (g *Game) Update() error {
 
 // updateStart handles start screen input
 func (g *Game) updateStart() error {
-	if ebiten.IsKeyPressed(ebiten.KeyLeft) || ebiten.IsKeyPressed(ebiten.KeyRight) ||
-		ebiten.IsKeyPressed(ebiten.KeyA) || ebiten.IsKeyPressed(ebiten.KeyD) ||
-		ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+	if inpututil.IsKeyJustPressed(ebiten.KeyLeft) || inpututil.IsKeyJustPressed(ebiten.KeyRight) ||
+		inpututil.IsKeyJustPressed(ebiten.KeyA) || inpututil.IsKeyJustPressed(ebiten.KeyD) ||
+		inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 		g.state = StatePlaying
 	}
 	return nil
@@ -191,8 +200,8 @@ func (g *Game) updateStart() error {
 
 // updatePlaying handles main game logic
 func (g *Game) updatePlaying() error {
-	// Check for pause input
-	if ebiten.IsKeyPressed(ebiten.KeySpace) || ebiten.IsKeyPressed(ebiten.KeyEnter) {
+	// Check for pause input using IsKeyJustPressed to prevent flickering
+	if inpututil.IsKeyJustPressed(ebiten.KeySpace) || inpututil.IsKeyJustPressed(ebiten.KeyEnter) {
 		g.state = StatePaused
 		return nil
 	}
@@ -237,9 +246,10 @@ func (g *Game) updatePlaying() error {
 // updateWaitingToContinue handles waiting to continue after losing a life
 func (g *Game) updateWaitingToContinue() error {
 	// Check for any input to continue
-	if ebiten.IsKeyPressed(ebiten.KeyLeft) || ebiten.IsKeyPressed(ebiten.KeyRight) ||
-		ebiten.IsKeyPressed(ebiten.KeyA) || ebiten.IsKeyPressed(ebiten.KeyD) ||
-		ebiten.IsKeyPressed(ebiten.KeySpace) || ebiten.IsKeyPressed(ebiten.KeyEnter) || ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+	if inpututil.IsKeyJustPressed(ebiten.KeyLeft) || inpututil.IsKeyJustPressed(ebiten.KeyRight) ||
+		inpututil.IsKeyJustPressed(ebiten.KeyA) || inpututil.IsKeyJustPressed(ebiten.KeyD) ||
+		inpututil.IsKeyJustPressed(ebiten.KeySpace) || inpututil.IsKeyJustPressed(ebiten.KeyEnter) ||
+		inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 
 		// Reset ball position and continue playing (life already decremented)
 		g.ball = entities.NewBallAbovePaddle(g.paddle.X(), g.level.BallSpeed)
@@ -256,10 +266,11 @@ func (g *Game) updateGameOver() error {
 
 // updatePaused handles pause screen input
 func (g *Game) updatePaused() error {
-	// Check for any input to resume
-	if ebiten.IsKeyPressed(ebiten.KeyLeft) || ebiten.IsKeyPressed(ebiten.KeyRight) ||
-		ebiten.IsKeyPressed(ebiten.KeyA) || ebiten.IsKeyPressed(ebiten.KeyD) ||
-		ebiten.IsKeyPressed(ebiten.KeySpace) || ebiten.IsKeyPressed(ebiten.KeyEnter) || ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+	// Check for any input to resume using IsKeyJustPressed to prevent flickering
+	if inpututil.IsKeyJustPressed(ebiten.KeyLeft) || inpututil.IsKeyJustPressed(ebiten.KeyRight) ||
+		inpututil.IsKeyJustPressed(ebiten.KeyA) || inpututil.IsKeyJustPressed(ebiten.KeyD) ||
+		inpututil.IsKeyJustPressed(ebiten.KeySpace) || inpututil.IsKeyJustPressed(ebiten.KeyEnter) ||
+		inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 		g.state = StatePlaying
 	}
 	return nil
@@ -268,9 +279,10 @@ func (g *Game) updatePaused() error {
 // updateLevelComplete handles level complete state
 func (g *Game) updateLevelComplete() error {
 	// Check for any input to advance to next level
-	if ebiten.IsKeyPressed(ebiten.KeyLeft) || ebiten.IsKeyPressed(ebiten.KeyRight) ||
-		ebiten.IsKeyPressed(ebiten.KeyA) || ebiten.IsKeyPressed(ebiten.KeyD) ||
-		ebiten.IsKeyPressed(ebiten.KeySpace) || ebiten.IsKeyPressed(ebiten.KeyEnter) || ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+	if inpututil.IsKeyJustPressed(ebiten.KeyLeft) || inpututil.IsKeyJustPressed(ebiten.KeyRight) ||
+		inpututil.IsKeyJustPressed(ebiten.KeyA) || inpututil.IsKeyJustPressed(ebiten.KeyD) ||
+		inpututil.IsKeyJustPressed(ebiten.KeySpace) || inpututil.IsKeyJustPressed(ebiten.KeyEnter) ||
+		inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 
 		// Try to advance to the next level
 		nextLevel := g.currentLevel + 1
@@ -309,36 +321,58 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 // Layout implements ebiten.Game interface
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	// Enforce a 4:3 aspect-ratio on the OS window. We clamp the window size to the
-	// closest multiple of the base resolution (1440×1080) that fits in the space
-	// the user just requested. This lets the user resize freely from a corner while
-	// preventing side-only or top/bottom-only stretching.
+	// Always render the game at the fixed logical resolution.
+	const logicalW, logicalH = 1440, 1080
 
-	// Ignore the first call where outsideWidth/outsideHeight can be zero.
-	if outsideWidth > 0 && outsideHeight > 0 {
-		baseW, baseH := 1440, 1080
-
-		scaleW := float64(outsideWidth) / float64(baseW)
-		scaleH := float64(outsideHeight) / float64(baseH)
-
-		// Pick the smaller scale to ensure the game always fits.
-		scale := scaleW
-		if scaleH < scale {
-			scale = scaleH
-		}
-
-		// Round to nearest integer pixel size.
-		desiredW := int(scale * float64(baseW))
-		desiredH := int(scale * float64(baseH))
-
-		// Only update if the desired size differs from the current size.
-		if (desiredW != outsideWidth || desiredH != outsideHeight) &&
-			(desiredW != g.lastWindowW || desiredH != g.lastWindowH) {
-			ebiten.SetWindowSize(desiredW, desiredH)
-			g.lastWindowW = desiredW
-			g.lastWindowH = desiredH
-		}
+	// Ignore the initial call where the outside size can be zero.
+	if outsideWidth == 0 || outsideHeight == 0 {
+		return logicalW, logicalH
 	}
 
-	return 1440, 1080
+	// Record the very first *valid* outside size we get so we have a baseline for later comparison.
+	if g.lastWindowW == 0 && g.lastWindowH == 0 {
+		g.lastWindowW = outsideWidth
+		g.lastWindowH = outsideHeight
+		return logicalW, logicalH
+	}
+
+	// If the window is already a perfect 4:3 fit, just remember it and return.
+	if outsideWidth*3 == outsideHeight*4 {
+		g.lastWindowW = outsideWidth
+		g.lastWindowH = outsideHeight
+		return logicalW, logicalH
+	}
+
+	// Decide which dimension (width or height) the user is primarily dragging by checking
+	// which changed the most since the last call.
+	dw := abs(outsideWidth - g.lastWindowW)
+	dh := abs(outsideHeight - g.lastWindowH)
+
+	var desiredW, desiredH int
+	if dw >= dh {
+		// Width is dominating the resize – adjust height to keep 4:3.
+		desiredW = outsideWidth
+		desiredH = desiredW * 3 / 4
+	} else {
+		// Height is dominating – adjust width to keep 4:3.
+		desiredH = outsideHeight
+		desiredW = desiredH * 4 / 3
+	}
+
+	// Ensure we don’t enter an infinite loop by only updating when necessary.
+	if desiredW != g.lastWindowW || desiredH != g.lastWindowH {
+		ebiten.SetWindowSize(desiredW, desiredH)
+		g.lastWindowW = desiredW
+		g.lastWindowH = desiredH
+	}
+
+	return logicalW, logicalH
+}
+
+// abs is a tiny helper since Go’s standard library lacks maths on ints until Go 1.21.
+func abs(i int) int {
+	if i < 0 {
+		return -i
+	}
+	return i
 }

@@ -11,13 +11,21 @@ import (
 
 // Level represents a complete level configuration
 type Level struct {
-	Name          string                `json:"name"`
-	BrickWidth    int                   `json:"brick_width"`     // configurable brick width
-	BrickHeight   int                   `json:"brick_height"`    // configurable brick height
-	BrickSpacingX int                   `json:"brick_spacing_x"` // horizontal gap
-	BrickSpacingY int                   `json:"brick_spacing_y"` // vertical gap
-	BallSpeed     float64               `json:"ball_speed"`      // ball speed in pixels per second
-	Bricks        []entities.LevelBrick `json:"bricks"`
+	Name string `json:"name"`
+
+	// Grid-based format (legacy)
+	BrickWidth    int `json:"brick_width,omitempty"`     // configurable brick width
+	BrickHeight   int `json:"brick_height,omitempty"`    // configurable brick height
+	BrickSpacingX int `json:"brick_spacing_x,omitempty"` // horizontal gap
+	BrickSpacingY int `json:"brick_spacing_y,omitempty"` // vertical gap
+
+	// Pixel-perfect format (new)
+	UsePixelPositioning bool `json:"use_pixel_positioning,omitempty"` // flag to indicate pixel format
+	DefaultBrickWidth   int  `json:"default_brick_width,omitempty"`   // default width if not specified per brick
+	DefaultBrickHeight  int  `json:"default_brick_height,omitempty"`  // default height if not specified per brick
+
+	BallSpeed float64               `json:"ball_speed"` // ball speed in pixels per second
+	Bricks    []entities.LevelBrick `json:"bricks"`
 }
 
 // LoadLevel loads a level from a JSON file
@@ -34,15 +42,39 @@ func LoadLevel(levelNum int) (*Level, error) {
 		return nil, fmt.Errorf("failed to parse level file %s: %v", filename, err)
 	}
 
-	// Attempt to auto-fit the level into the 700×500 gameplay area if necessary.
-	AutoFitLevel(&level)
+	// Auto-detect pixel positioning format
+	if level.UsePixelPositioning || isPixelFormat(&level) {
+		level.UsePixelPositioning = true
+		// Set reasonable defaults for pixel format
+		if level.DefaultBrickWidth == 0 {
+			level.DefaultBrickWidth = 150 // default brick width
+		}
+		if level.DefaultBrickHeight == 0 {
+			level.DefaultBrickHeight = 60 // default brick height
+		}
+	} else {
+		// Legacy grid-based format - apply auto-fit if needed
+		AutoFitLevel(&level)
+	}
 
-	// Validate again after potential adjustments.
+	// Validate the level
 	if err := ValidateLevel(&level); err != nil {
 		return nil, fmt.Errorf("level validation failed for %s: %v", filename, err)
 	}
 
 	return &level, nil
+}
+
+// isPixelFormat auto-detects if this is a pixel-perfect format based on the data
+func isPixelFormat(level *Level) bool {
+	// Check if any brick has "type" field (new format) or "pixel_x"/"pixel_y" fields
+	for _, brick := range level.Bricks {
+		if brick.Type != "" || brick.PixelX != 0 || brick.PixelY != 0 {
+			return true
+		}
+	}
+	// Check if grid sizing fields are missing (indicating pixel format)
+	return level.BrickWidth == 0 && level.BrickHeight == 0
 }
 
 // CreateDefaultLevel creates a simple default level for fallback

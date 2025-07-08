@@ -186,26 +186,37 @@ func (r *Renderer) DrawWaitingToContinue(screen *ebiten.Image, lives int) {
 
 // DrawPauseScreen draws the pause screen
 func (r *Renderer) DrawPauseScreen(screen *ebiten.Image) {
-	// Clear screen with black background
-	screen.Fill(color.Black)
+	// Draw the supplied pause screen image scaled to the window.
+	img := r.images.PauseScreen
+	if img == nil {
+		// If the image failed to load, just clear to black without overlay text.
+		screen.Fill(color.Black)
+		return
+	}
 
-	// Pause message
-	r.drawText(screen, "GAME PAUSED", 360-60, 220, color.White)
-
-	// Resume instruction
-	r.drawText(screen, "Press ANY KEY to Resume", 360-100, 320, color.White)
+	op := &ebiten.DrawImageOptions{}
+	bounds := img.Bounds()
+	scaleX := 1440.0 / float64(bounds.Dx())
+	scaleY := 1080.0 / float64(bounds.Dy())
+	op.GeoM.Scale(scaleX, scaleY)
+	screen.DrawImage(img, op)
 }
 
 // DrawLevelComplete draws the level complete screen
 func (r *Renderer) DrawLevelComplete(screen *ebiten.Image) {
-	// Clear screen with black background
-	screen.Fill(color.Black)
+	// Draw the supplied level complete screen image scaled to the window.
+	img := r.images.LevelCompleteScreen
+	if img == nil {
+		screen.Fill(color.Black)
+		return
+	}
 
-	// Level complete message
-	r.drawText(screen, "LEVEL COMPLETE!", 360-70, 220, color.White)
-
-	// Continue instruction
-	r.drawText(screen, "Press ANY KEY to Continue", 360-100, 320, color.White)
+	op := &ebiten.DrawImageOptions{}
+	bounds := img.Bounds()
+	scaleX := 1440.0 / float64(bounds.Dx())
+	scaleY := 1080.0 / float64(bounds.Dy())
+	op.GeoM.Scale(scaleX, scaleY)
+	screen.DrawImage(img, op)
 }
 
 // drawBricks draws all active bricks using sprite images

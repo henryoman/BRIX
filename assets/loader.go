@@ -50,6 +50,14 @@ var startScreen1PNG []byte
 //go:embed startscreens/start-screen-2.png
 var startScreen2PNG []byte
 
+// Embed additional UI screens
+//
+//go:embed startscreens/pause-screen.png
+var pauseScreenPNG []byte
+
+//go:embed startscreens/level-complete-screen.png
+var levelCompleteScreenPNG []byte
+
 type Images struct {
 	Paddle          *ebiten.Image
 	BrickStandard   *ebiten.Image
@@ -60,6 +68,9 @@ type Images struct {
 	LevelBackground *ebiten.Image
 	StartScreen1    *ebiten.Image
 	StartScreen2    *ebiten.Image
+
+	PauseScreen         *ebiten.Image
+	LevelCompleteScreen *ebiten.Image
 }
 
 func LoadImages() (*Images, error) {
@@ -112,6 +123,17 @@ func LoadImages() (*Images, error) {
 		return nil, err
 	}
 
+	// Load new UI screens
+	pauseScreen, err := loadImageFromBytes(pauseScreenPNG)
+	if err != nil {
+		return nil, err
+	}
+
+	levelCompleteScreen, err := loadImageFromBytes(levelCompleteScreenPNG)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Images{
 		Paddle:          paddle,
 		BrickStandard:   brickStandard,
@@ -122,6 +144,9 @@ func LoadImages() (*Images, error) {
 		LevelBackground: levelBackground,
 		StartScreen1:    start1,
 		StartScreen2:    start2,
+
+		PauseScreen:         pauseScreen,
+		LevelCompleteScreen: levelCompleteScreen,
 	}, nil
 }
 

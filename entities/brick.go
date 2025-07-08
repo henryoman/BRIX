@@ -22,7 +22,13 @@ const (
 
 // Brick represents a single brick in the level
 type Brick struct {
-	x, y      int       // grid position
+	// Grid positioning (legacy)
+	x, y int // grid position
+
+	// Pixel positioning (new)
+	pixelX, pixelY   float64 // absolute pixel position
+	usePixelPosition bool    // whether to use pixel or grid positioning
+
 	brickType BrickType // type of brick (maps directly to sprite)
 	hits      int       // hits required to destroy
 	active    bool      // whether brick is still active
@@ -37,10 +43,20 @@ type Brick struct {
 
 // LevelBrick represents a brick definition from level data
 type LevelBrick struct {
+	// Grid-based positioning (legacy)
 	X         int    `json:"x"`
 	Y         int    `json:"y"`
-	BrickType string `json:"bricktype"` // brick type name
-	Hits      int    `json:"hits"`
+	BrickType string `json:"bricktype,omitempty"` // legacy field name
+
+	// Pixel-perfect positioning (new format)
+	PixelX int    `json:"pixel_x,omitempty"` // absolute pixel X position
+	PixelY int    `json:"pixel_y,omitempty"` // absolute pixel Y position
+	Type   string `json:"type,omitempty"`    // unified type field
+
+	// Common fields
+	Hits   int `json:"hits"`
+	Width  int `json:"width,omitempty"`  // per-brick width override
+	Height int `json:"height,omitempty"` // per-brick height override
 }
 
 // NewBrick creates a new brick at the specified grid position with custom sizing
@@ -91,6 +107,61 @@ func NewBrickFromLevelWithBounds(levelBrick LevelBrick, width, height, spacingX,
 		spacingY:  spacingY,
 		fieldMinX: fieldMinX,
 		fieldMaxX: fieldMaxX,
+	}
+}
+
+// NewBrickPixelPosition creates a new brick at the specified pixel position
+func NewBrickPixelPosition(pixelX, pixelY float64, brickType BrickType, hits, width, height int) *Brick {
+	return &Brick{
+		pixelX:           pixelX,
+		pixelY:           pixelY,
+		usePixelPosition: true,
+		brickType:        brickType,
+		hits:             hits,
+		active:           true,
+		width:            width,
+		height:           height,
+	}
+}
+
+// NewBrickFromLevelPixel creates a brick from pixel-perfect level data
+func NewBrickFromLevelPixel(levelBrick LevelBrick, defaultWidth, defaultHeight int) *Brick {
+	// Determine type from either "type" or "bricktype" field
+	brickTypeStr := levelBrick.Type
+	if brickTypeStr == "" {
+		brickTypeStr = levelBrick.BrickType
+	}
+
+	// Use per-brick dimensions or defaults
+	width := levelBrick.Width
+	if width == 0 {
+		width = defaultWidth
+	}
+	height := levelBrick.Height
+	if height == 0 {
+		height = defaultHeight
+	}
+
+	// Use pixel position if available, otherwise convert from grid
+	var pixelX, pixelY float64
+	if levelBrick.PixelX != 0 || levelBrick.PixelY != 0 {
+		pixelX = float64(levelBrick.PixelX)
+		pixelY = float64(levelBrick.PixelY)
+	} else {
+		// Convert from grid coordinates using default spacing
+		pixelX = float64(levelBrick.X)
+		pixelY = float64(levelBrick.Y)
+	}
+
+	return &Brick{
+		pixelX:           pixelX,
+		pixelY:           pixelY,
+		usePixelPosition: true,
+		brickType:        ParseBrickType(brickTypeStr),
+		hits:             levelBrick.Hits,
+		active:           true,
+		width:            width,
+		height:           height,
 	}
 }
 
@@ -153,6 +224,12 @@ func (b *Brick) Hit() bool {
 
 // GetScreenPosition returns the pixel position of the brick on screen with smart centering
 func (b *Brick) GetScreenPosition() (float64, float64) {
+	// If using pixel positioning, return absolute position within game area
+	if b.usePixelPosition {
+		return GameAreaLeft + b.pixelX, GameAreaTop + b.pixelY
+	}
+
+	// Legacy grid-based positioning with smart centering
 	// Calculate horizontal centering offset based on field bounds.
 	cols := b.fieldMaxX - b.fieldMinX + 1
 	if cols <= 0 {
