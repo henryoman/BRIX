@@ -4,7 +4,7 @@
   "brick_height": 64,
   "brick_spacing_x": 20,
   "brick_spacing_y": 20,
-  "ball_speed": 560,
+  "ball_speed": 550,
   "bricks": [
     {"x": 3, "y": 2, "bricktype": "columbia", "hits": 1},
     {"x": 4, "y": 2, "bricktype": "supreme", "hits": 1},
